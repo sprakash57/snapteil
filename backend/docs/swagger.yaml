@@ -9,6 +9,36 @@ definitions:
         example: "2026-03-27T10:30:00Z"
         type: string
     type: object
+  models.ErrorResponse:
+    properties:
+      message:
+        example: internal server error
+        type: string
+      status:
+        example: 500
+        type: integer
+    type: object
+  models.Image:
+    properties:
+      createdAt:
+        type: string
+      filename:
+        type: string
+      height:
+        type: integer
+      id:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      url:
+        type: string
+      width:
+        type: integer
+    type: object
 host: localhost:4000
 info:
   contact: {}
@@ -26,7 +56,30 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handlers.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
       summary: Health check
       tags:
       - health
+  /api/v1/images:
+    get:
+      description: Returns the list of initial images with their metadata
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Image'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get initial images
+      tags:
+      - images
 swagger: "2.0"

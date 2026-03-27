@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1",
+    "title": "Serene Lake",
+    "tags": ["nature", "lake", "landscape"],
+    "filename": "lake.avif",
+    "url": "/uploads/lake.avif",
+    "width": 740,
+    "height": 1113,
+    "createdAt": "2026-03-27T10:00:00Z"
+  },
+  {
+    "id": "2",
+    "title": "Autumn Leaves",
+    "tags": ["nature", "leaves", "autumn"],
+    "filename": "leaves.jpg",
+    "url": "/uploads/leaves.jpg",
+    "width": 768,
+    "height": 512,
+    "createdAt": "2026-03-27T10:01:00Z"
+  },
+  {
+    "id": "3",
+    "title": "Into Nature",
+    "tags": ["nature", "forest", "landscape"],
+    "filename": "nature.avif",
+    "url": "/uploads/nature.avif",
+    "width": 3000,
+    "height": 4500,
+    "createdAt": "2026-03-27T10:02:00Z"
+  },
+  {
+    "id": "4",
+    "title": "Forest Path",
+    "tags": ["nature", "path", "forest"],
+    "filename": "path.jpg",
+    "url": "/uploads/path.jpg",
+    "width": 1080,
+    "height": 1920,
+    "createdAt": "2026-03-27T10:03:00Z"
+  },
+  {
+    "id": "5",
+    "title": "Flowing Water",
+    "tags": ["nature", "water", "river"],
+    "filename": "water.jpg",
+    "url": "/uploads/water.jpg",
+    "width": 2935,
+    "height": 4402,
+    "createdAt": "2026-03-27T10:04:00Z"
+  }
+]

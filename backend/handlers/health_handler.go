@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	_ "github.com/sprakash57/snaptiel/backend/models"
 )
 
 type HealthResponse struct {
@@ -18,6 +19,7 @@ type HealthResponse struct {
 //	@Tags			health
 //	@Produce		json
 //	@Success		200	{object}	HealthResponse
+//	@Failure		500	{object}	models.ErrorResponse
 //	@Router			/api/v1/health [get]
 func CheckHealthHandler() fiber.Handler {
 	return func(c fiber.Ctx) error {

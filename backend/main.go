@@ -5,7 +5,9 @@ import (
 
 	"github.com/gofiber/contrib/v3/swagger"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/sprakash57/snaptiel/backend/handlers"
 	"github.com/sprakash57/snaptiel/backend/routes"
 )
 
@@ -16,12 +18,16 @@ import (
 //	@BasePath		/
 
 func main() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: handlers.ErrorHandler,
+	})
 
 	// middlewares
 	app.Use(logger.New())
-
-	// swagger
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept"},
+	}))
 	app.Use(swagger.New(swagger.Config{
 		BasePath: "/",
 		FilePath: "./docs/swagger.json",
@@ -29,7 +35,7 @@ func main() {
 	}))
 
 	// routes
-	routes.SetupV1(app)
+	routes.SetupApiV1(app)
 
 	log.Fatal(app.Listen(":4000"))
 }
