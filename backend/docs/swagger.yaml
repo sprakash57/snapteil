@@ -1,22 +1,32 @@
-openapi: 3.0.3
+basePath: /
+definitions:
+  handlers.HealthResponse:
+    properties:
+      status:
+        example: ok
+        type: string
+      timestamp:
+        example: "2026-03-27T10:30:00Z"
+        type: string
+    type: object
+host: localhost:4000
 info:
-  title: Snapteil API
+  contact: {}
   description: Snapteil backend API
-  version: 1.0.0
-servers:
-  - url: http://localhost:4000
+  title: Snapteil API
+  version: "1.0"
 paths:
   /api/v1/health:
     get:
-      summary: Health check
       description: Returns server health status with a timestamp
-      tags:
-        - health
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+swagger: "2.0"
