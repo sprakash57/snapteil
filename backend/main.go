@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/gofiber/fiber/v3/middleware/static"
+	"github.com/sprakash57/snapteil/backend/config"
 	"github.com/sprakash57/snapteil/backend/handlers"
 	"github.com/sprakash57/snapteil/backend/routes"
 	"github.com/sprakash57/snapteil/backend/services"
@@ -20,8 +21,11 @@ import (
 //	@BasePath		/
 
 func main() {
+	cfg := config.Load()
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: handlers.ErrorHandler,
+		BodyLimit:    int(cfg.MaxFileSize),
 	})
 
 	// middlewares
@@ -37,7 +41,7 @@ func main() {
 	}))
 
 	// services
-	imageService, err := services.NewImageService("./data/seed.json", "./uploads")
+	imageService, err := services.NewImageService(cfg)
 	if err != nil {
 		log.Fatal("failed to initialize image service: ", err)
 	}
@@ -46,5 +50,5 @@ func main() {
 	app.Get("/uploads/*", static.New("./uploads"))
 	routes.SetupApiV1(app, imageService)
 
-	log.Fatal(app.Listen(":4000"))
+	log.Fatal(app.Listen(":" + cfg.Port))
 }

@@ -16,19 +16,18 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
+	"github.com/sprakash57/snapteil/backend/config"
 	"github.com/sprakash57/snapteil/backend/models"
 )
 
 type ImageService struct {
-	mu        sync.RWMutex
-	images    []models.Image
-	uploadDir string
+	mu     sync.RWMutex
+	images []models.Image
+	cfg    config.Config
 }
 
-const maxImageDimension = 1920
-
-func NewImageService(seedPath string, uploadDir string) (*ImageService, error) {
-	data, err := os.ReadFile(seedPath)
+func NewImageService(cfg config.Config) (*ImageService, error) {
+	data, err := os.ReadFile("./data/seed.json")
 	if err != nil {
 		return nil, err
 	}
@@ -38,21 +37,22 @@ func NewImageService(seedPath string, uploadDir string) (*ImageService, error) {
 		return nil, err
 	}
 
-	return &ImageService{images: images, uploadDir: uploadDir}, nil
+	return &ImageService{images: images, cfg: cfg}, nil
 }
 
-func (s *ImageService) normalizeImage(img image.Image) image.Image {
+func (imageService *ImageService) normalizeImage(img image.Image) image.Image {
 	bounds := img.Bounds()
 	width, height := bounds.Dx(), bounds.Dy()
+	maxDim := imageService.cfg.MaxImageDimension
 
-	if width <= maxImageDimension && height <= maxImageDimension {
+	if width <= maxDim && height <= maxDim {
 		return img
 	}
 
 	if width > height {
-		return imaging.Resize(img, maxImageDimension, 0, imaging.Lanczos)
+		return imaging.Resize(img, maxDim, 0, imaging.Lanczos)
 	}
-	return imaging.Resize(img, 0, maxImageDimension, imaging.Lanczos)
+	return imaging.Resize(img, 0, maxDim, imaging.Lanczos)
 }
 
 func (imageService *ImageService) GetPaginated(page, perPage int, tag string) models.PaginatedResponse {
@@ -115,7 +115,7 @@ func (imageService *ImageService) Upload(file *multipart.FileHeader, title strin
 
 	id := uuid.New().String()
 	filename := id + ".jpg"
-	filePath := filepath.Join(imageService.uploadDir, filename)
+	filePath := filepath.Join("./uploads", filename)
 
 	outFile, err := os.Create(filePath)
 	if err != nil {
@@ -158,9 +158,9 @@ func (imageService *ImageService) ParseTags(str string) []string {
 }
 
 func (imageService *ImageService) IsValidImageType(contentType string) bool {
-	switch contentType {
-	case "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif", "image/svg+xml":
-		return true
-	}
-	return false
+	return slices.Contains(imageService.cfg.AllowedMimeTypes, contentType)
+}
+
+func (imageService *ImageService) MaxFileSize() int64 {
+	return imageService.cfg.MaxFileSize
 }

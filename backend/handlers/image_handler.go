@@ -93,6 +93,10 @@ func UploadImage(imageService *services.ImageService) fiber.Handler {
 			return fiber.NewError(fiber.StatusBadRequest, "file is required")
 		}
 
+		if file.Size > imageService.MaxFileSize() {
+			return fiber.NewError(fiber.StatusRequestEntityTooLarge, "file size exceeds limit")
+		}
+
 		if !imageService.IsValidImageType(file.Header.Get("Content-Type")) {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid file type; accepted: JPEG, PNG, GIF, WebP, AVIF, SVG")
 		}
