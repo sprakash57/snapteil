@@ -112,6 +112,43 @@ paths:
       summary: Get paginated images
       tags:
       - images
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a new image with title and tags
+      parameters:
+      - description: Image title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Comma-separated tags
+        in: formData
+        name: tags
+        type: string
+      - description: Image file (JPEG, PNG, GIF, WebP, AVIF, SVG)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Image'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Upload an image
+      tags:
+      - images
   /api/v1/images/init:
     get:
       description: Returns the list of initial images with their metadata

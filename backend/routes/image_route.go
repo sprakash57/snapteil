@@ -9,4 +9,5 @@ import (
 func ImageRoute(router fiber.Router, imageService *services.ImageService) {
 	router.Get("/images/init", handlers.GetInitialImagesHandler())
 	router.Get("/images", handlers.GetImages(imageService))
+	router.Post("/images", handlers.UploadImage(imageService))
 }

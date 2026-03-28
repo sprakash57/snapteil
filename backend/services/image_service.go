@@ -2,20 +2,32 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
+	"image"
+	"image/jpeg"
+	"mime/multipart"
 	"os"
+	"path/filepath"
 	"slices"
 	"sort"
+	"strings"
 	"sync"
+	"time"
 
+	"github.com/disintegration/imaging"
+	"github.com/google/uuid"
 	"github.com/sprakash57/snapteil/backend/models"
 )
 
 type ImageService struct {
-	mu     sync.RWMutex
-	images []models.Image
+	mu        sync.RWMutex
+	images    []models.Image
+	uploadDir string
 }
 
-func NewImageService(seedPath string) (*ImageService, error) {
+const maxImageDimension = 1920
+
+func NewImageService(seedPath string, uploadDir string) (*ImageService, error) {
 	data, err := os.ReadFile(seedPath)
 	if err != nil {
 		return nil, err
@@ -26,7 +38,21 @@ func NewImageService(seedPath string) (*ImageService, error) {
 		return nil, err
 	}
 
-	return &ImageService{images: images}, nil
+	return &ImageService{images: images, uploadDir: uploadDir}, nil
+}
+
+func (s *ImageService) normalizeImage(img image.Image) image.Image {
+	bounds := img.Bounds()
+	width, height := bounds.Dx(), bounds.Dy()
+
+	if width <= maxImageDimension && height <= maxImageDimension {
+		return img
+	}
+
+	if width > height {
+		return imaging.Resize(img, maxImageDimension, 0, imaging.Lanczos)
+	}
+	return imaging.Resize(img, 0, maxImageDimension, imaging.Lanczos)
 }
 
 func (imageService *ImageService) GetPaginated(page, perPage int, tag string) models.PaginatedResponse {
@@ -63,4 +89,78 @@ func (imageService *ImageService) GetPaginated(page, perPage int, tag string) mo
 		PerPage: perPage,
 		HasMore: end < total,
 	}
+}
+
+func (imageService *ImageService) Add(img models.Image) {
+	imageService.mu.Lock()
+	defer imageService.mu.Unlock()
+	imageService.images = append(imageService.images, img)
+}
+
+// Upload decodes, normalizes, and returns the saved uploaded image file.
+func (imageService *ImageService) Upload(file *multipart.FileHeader, title string, tags []string) (models.Image, error) {
+	src, err := file.Open()
+	if err != nil {
+		return models.Image{}, fmt.Errorf("failed to open uploaded file: %w", err)
+	}
+	defer src.Close()
+
+	img, _, err := image.Decode(src)
+	if err != nil {
+		return models.Image{}, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	img = imageService.normalizeImage(img)
+	bounds := img.Bounds()
+
+	id := uuid.New().String()
+	filename := id + ".jpg"
+	filePath := filepath.Join(imageService.uploadDir, filename)
+
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return models.Image{}, fmt.Errorf("failed to save image: %w", err)
+	}
+	defer outFile.Close()
+	// Encode as JPEG with quality 85 to balance size and quality
+	if err := jpeg.Encode(outFile, img, &jpeg.Options{Quality: 85}); err != nil {
+		return models.Image{}, fmt.Errorf("failed to encode image: %w", err)
+	}
+
+	record := models.Image{
+		ID:        id,
+		Title:     title,
+		Tags:      tags,
+		Filename:  filename,
+		URL:       "/uploads/" + filename,
+		Width:     bounds.Dx(),
+		Height:    bounds.Dy(),
+		CreatedAt: time.Now(),
+	}
+
+	imageService.Add(record)
+	return record, nil
+}
+
+func (imageService *ImageService) ParseTags(str string) []string {
+	if str == "" {
+		return []string{}
+	}
+	parts := strings.Split(str, ",")
+	tags := make([]string, 0, len(parts))
+	for _, part := range parts {
+		tag := strings.TrimSpace(strings.ToLower(part))
+		if tag != "" {
+			tags = append(tags, tag)
+		}
+	}
+	return tags
+}
+
+func (imageService *ImageService) IsValidImageType(contentType string) bool {
+	switch contentType {
+	case "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif", "image/svg+xml":
+		return true
+	}
+	return false
 }

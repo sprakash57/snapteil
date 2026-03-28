@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/sprakash57/snapteil/backend/handlers"
 	"github.com/sprakash57/snapteil/backend/routes"
 	"github.com/sprakash57/snapteil/backend/services"
@@ -36,12 +37,13 @@ func main() {
 	}))
 
 	// services
-	imageService, err := services.NewImageService("./data/seed.json")
+	imageService, err := services.NewImageService("./data/seed.json", "./uploads")
 	if err != nil {
 		log.Fatal("failed to initialize image service: ", err)
 	}
 
 	// routes
+	app.Get("/uploads/*", static.New("./uploads"))
 	routes.SetupApiV1(app, imageService)
 
 	log.Fatal(app.Listen(":4000"))
