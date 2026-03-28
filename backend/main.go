@@ -45,10 +45,12 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to initialize image service: ", err)
 	}
+	socketService := services.NewSocketService()
 
 	// routes
 	app.Get("/uploads/*", static.New("./uploads"))
-	routes.SetupApiV1(app, imageService)
+	routes.SetupApiV1(app, imageService, socketService)
+	routes.WebSocketRoute(app, socketService)
 
 	log.Fatal(app.Listen(":" + cfg.Port))
 }

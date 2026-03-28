@@ -79,7 +79,7 @@ func GetImages(imageService *services.ImageService) fiber.Handler {
 //	@Failure		400	{object}	models.ErrorResponse
 //	@Failure		500	{object}	models.ErrorResponse
 //	@Router			/api/v1/images [post]
-func UploadImage(imageService *services.ImageService) fiber.Handler {
+func UploadImage(imageService *services.ImageService, socket *services.SocketService) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		title := strings.TrimSpace(c.FormValue("title"))
 		if title == "" {
@@ -106,6 +106,9 @@ func UploadImage(imageService *services.ImageService) fiber.Handler {
 			log.Printf("Upload failed: %v", err)
 			return fiber.NewError(fiber.StatusInternalServerError, "failed to process image")
 		}
+
+		// Notify all connected WebSocket clients about the new image
+		socket.Broadcast(record)
 
 		log.Printf("Image uploaded: %s (%s)", record.Title, record.Filename)
 		return c.Status(fiber.StatusCreated).JSON(record)
