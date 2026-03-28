@@ -7,8 +7,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/sprakash57/snapteil/backend/routes"
+	"github.com/sprakash57/snapteil/backend/services"
 	"github.com/sprakash57/snaptiel/backend/handlers"
-	"github.com/sprakash57/snaptiel/backend/routes"
 )
 
 //	@title			Snapteil API
@@ -34,8 +35,14 @@ func main() {
 		Path:     "swagger",
 	}))
 
+	// services
+	imageService, err := services.NewImageService("./data/seed.json")
+	if err != nil {
+		log.Fatal("failed to initialize image service: ", err)
+	}
+
 	// routes
-	routes.SetupApiV1(app)
+	routes.SetupApiV1(app, imageService)
 
 	log.Fatal(app.Listen(":4000"))
 }

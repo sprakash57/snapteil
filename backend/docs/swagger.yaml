@@ -39,6 +39,21 @@ definitions:
       width:
         type: integer
     type: object
+  models.PaginatedResponse:
+    properties:
+      hasMore:
+        type: boolean
+      images:
+        items:
+          $ref: '#/definitions/models.Image'
+        type: array
+      page:
+        type: integer
+      perPage:
+        type: integer
+      total:
+        type: integer
+    type: object
 host: localhost:4000
 info:
   contact: {}
@@ -64,6 +79,40 @@ paths:
       tags:
       - health
   /api/v1/images:
+    get:
+      description: Returns a paginated list of images with optional tag filtering
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 100)'
+        in: query
+        name: perPage
+        type: integer
+      - description: Filter by tag
+        in: query
+        name: tag
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get paginated images
+      tags:
+      - images
+  /api/v1/images/init:
     get:
       description: Returns the list of initial images with their metadata
       produces:
