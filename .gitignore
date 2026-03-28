@@ -1,3 +1,4 @@
+# Ignore build artifacts and temporary files of backend service
 /backend/tmp/*
 /backend/uploads/*
 !/backend/uploads/lake.avif
@@ -6,4 +7,13 @@
 !/backend/uploads/path.jpg
 !/backend/uploads/water.jpg
 
-/backend/__debug__*
+/backend/__debug_bin*
+
+# Ignore build artifacts and temporary files of frontend client
+/client/node_modules
+/client/dist
+/client/*.local
+/client/npm-debug.log*
+
+/client/.vscode/*
+!/client/.vscode/extensions.json
