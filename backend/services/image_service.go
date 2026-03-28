@@ -7,7 +7,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/sprakash57/snaptiel/backend/models"
+	"github.com/sprakash57/snapteil/backend/models"
 )
 
 type ImageService struct {

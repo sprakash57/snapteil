@@ -2,8 +2,8 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v3"
-	"github.com/sprakash57/snaptiel/backend/handlers"
-	"github.com/sprakash57/snaptiel/backend/services"
+	"github.com/sprakash57/snapteil/backend/handlers"
+	"github.com/sprakash57/snapteil/backend/services"
 )
 
 func ImageRoute(router fiber.Router, imageService *services.ImageService) {

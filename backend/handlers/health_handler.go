@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	_ "github.com/sprakash57/snaptiel/backend/models"
+	_ "github.com/sprakash57/snapteil/backend/models"
 )
 
 type HealthResponse struct {

@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/sprakash57/snaptiel/backend/models"
+	"github.com/sprakash57/snapteil/backend/models"
 )
 
 func ErrorHandler(c fiber.Ctx, err error) error {

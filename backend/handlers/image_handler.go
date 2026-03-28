@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/sprakash57/snaptiel/backend/models"
-	"github.com/sprakash57/snaptiel/backend/services"
+	"github.com/sprakash57/snapteil/backend/models"
+	"github.com/sprakash57/snapteil/backend/services"
 )
 
 // GetInitialImagesHandler godoc

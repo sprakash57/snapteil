@@ -1,4 +1,4 @@
-module github.com/sprakash57/snaptiel/backend
+module github.com/sprakash57/snapteil/backend
 
 go 1.26.1
 
