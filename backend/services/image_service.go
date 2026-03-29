@@ -150,12 +150,26 @@ func (imageService *ImageService) ParseTags(str string) []string {
 		return []string{}
 	}
 	parts := strings.Split(str, ",")
+	seen := make(map[string]bool)
 	tags := make([]string, 0, len(parts))
 	for _, part := range parts {
 		tag := strings.TrimSpace(strings.ToLower(part))
-		if tag != "" {
-			tags = append(tags, tag)
+		if tag == "" || seen[tag] {
+			continue
 		}
+		// Strip any character that is not a-z, 0-9 or hyphen
+		var cleaned strings.Builder
+		for _, r := range tag {
+			if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+				cleaned.WriteRune(r)
+			}
+		}
+		tag = strings.Trim(cleaned.String(), "-") // remove leading/trailing hyphens
+		if tag == "" || len(tag) > 24 {
+			continue
+		}
+		seen[tag] = true
+		tags = append(tags, tag)
 	}
 	return tags
 }

@@ -1,26 +1,17 @@
 import type { Image } from "../types";
 
-const CARD_WIDTH = 468;
-const CARD_HEIGHT = 580;
-
 interface ImageCardProps {
   image: Image;
 }
 
 export default function ImageCard({ image }: ImageCardProps) {
   return (
-    <article
-      className="rounded-2xl bg-[#e0e5ec] shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff] overflow-hidden"
-      style={{ width: CARD_WIDTH }}
-    >
-      <div
-        className="flex items-center justify-center bg-[#d5dae3]"
-        style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}
-      >
+    <article className="w-full max-w-117 bg-[#e0e5ec] shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff] overflow-hidden">
+      <div className="w-full bg-[#d5dae3]">
         <img
           src={image.url}
           alt={image.title}
-          className="max-w-full max-h-full object-contain"
+          className="w-full h-auto block"
           loading="lazy"
         />
       </div>

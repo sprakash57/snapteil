@@ -66,7 +66,7 @@ export default function TagFilter({
 
         {/* Dropdown menu */}
         {open && allTags.length > 0 && (
-          <div className="absolute left-0 top-full mt-2 w-48 max-h-60 overflow-y-auto rounded-xl bg-[#e0e5ec] shadow-[5px_5px_10px_#b8b9be,-5px_-5px_10px_#ffffff] z-50 py-1">
+          <div className="absolute left-0 top-full mt-2 w-48 max-h-60 overflow-y-auto rounded-xl bg-[#e0e5ec] shadow-[2px_2px_0px_#b8b9be,-2px_-2px_0px_#ffffff] z-50 py-1">
             {allTags.map((tag) => {
               const active = selectedTags.includes(tag);
               return (

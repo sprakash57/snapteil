@@ -95,8 +95,14 @@ func UploadImage(imageService *services.ImageService, socket *services.SocketSer
 		if title == "" {
 			return fiber.NewError(fiber.StatusBadRequest, "title is required")
 		}
+		if len([]rune(title)) > 100 {
+			return fiber.NewError(fiber.StatusBadRequest, "title must be 100 characters or fewer")
+		}
 
 		tags := imageService.ParseTags(c.FormValue("tags"))
+		if len(tags) > 5 {
+			return fiber.NewError(fiber.StatusBadRequest, "maximum 5 tags allowed")
+		}
 
 		file, err := c.FormFile("file")
 		if err != nil {

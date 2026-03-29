@@ -48,7 +48,7 @@ export default function Feed({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-6 w-full">
           {images.map((image) => (
             <ImageCard key={image.id} image={image} />
           ))}

@@ -25,18 +25,35 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
       setError("Title is required");
       return;
     }
+    if (title.length > 100) {
+      setError("Title must be 100 characters or fewer");
+      return;
+    }
     if (!file || file.size === 0) {
       setError("Please select an image");
       return;
     }
 
     const rawTags = (formData.get("tags") as string) ?? "";
-    const tagCount = rawTags
+    const tags = rawTags
       .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean).length;
-    if (tagCount > 5) {
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (tags.length > 5) {
       setError("Maximum 5 tags allowed");
+      return;
+    }
+    const invalidTag = tags.find((t) => !/^[a-z0-9-]+$/.test(t));
+    if (invalidTag) {
+      setError(
+        `Tag "${invalidTag}" is invalid — use letters, numbers and hyphens only`,
+      );
+      return;
+    }
+    const longTag = tags.find((t) => t.length > 24);
+    if (longTag) {
+      setError(`Tag "${longTag}" is too long — max 24 characters`);
       return;
     }
 
@@ -62,11 +79,11 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/70"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md mx-4 rounded-2xl bg-[#e0e5ec] p-6 shadow-[8px_8px_16px_#b8b9be,-8px_-8px_16px_#ffffff]"
+        className="w-full max-w-md mx-4 rounded-2xl bg-[#e0e5ec] p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-gray-700 mb-4">
@@ -77,21 +94,28 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
           <input
             name="title"
             placeholder="Title"
+            maxLength={100}
             className="px-4 py-2.5 rounded-xl bg-[#e0e5ec] text-gray-700 placeholder-gray-400 shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] outline-none focus:shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff]"
           />
 
-          <input
-            name="tags"
-            placeholder="Tags (comma separated)"
-            className="px-4 py-2.5 rounded-xl bg-[#e0e5ec] text-gray-700 placeholder-gray-400 shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] outline-none focus:shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff]"
-          />
+          <div>
+            <input
+              name="tags"
+              maxLength={24}
+              placeholder="Tags: nature, street-fight (max 5)"
+              className="w-full px-4 py-2.5 rounded-xl bg-[#e0e5ec] text-gray-700 placeholder-gray-400 shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] outline-none focus:shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff]"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Letters, numbers and hyphens only. Max 24 chars per tag.
+            </p>
+          </div>
 
           <input
             ref={fileRef}
             name="file"
             type="file"
             accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml"
-            className="text-sm text-gray-600 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-[#e0e5ec] file:text-gray-700 file:shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] file:cursor-pointer"
+            className="text-sm p-2 text-gray-600 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-[#e0e5ec] file:text-gray-700 file:shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] file:cursor-pointer"
           />
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
