@@ -3,34 +3,63 @@ import type { Image, PaginatedResponse } from "../types";
 
 const PER_PAGE = 5;
 
-export function useImages() {
+export function useImages(filterTags: string[] = []) {
   const [images, setImages] = useState<Image[]>([]);
   const [page, setPage] = useState(2);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const loadingRef = useRef(false);
 
-  // Load first page (seeds + any in-memory uploads)
+  const tagsParam =
+    filterTags.length > 0
+      ? `&tags=${encodeURIComponent(filterTags.join(","))}`
+      : "";
+
+  // Re-fetch from page 1 when filter tags change
   useEffect(() => {
+    let cancelled = false;
+    setInitialLoading(true);
+    setError(null);
+
     async function loadInitial() {
       try {
-        const res = await fetch(`/api/v1/images?page=1&perPage=${PER_PAGE}`);
+        const res = await fetch(
+          `/api/v1/images?page=1&perPage=${PER_PAGE}${tagsParam}`,
+        );
         if (!res.ok) throw new Error("Failed to load images");
         const data: PaginatedResponse = await res.json();
-        setImages(data.images);
-        setHasMore(data.hasMore);
-        setError(null);
+        if (!cancelled) {
+          setImages(data.images);
+          setHasMore(data.hasMore);
+          setPage(2);
+          // Grow tag list (never shrink — filtered results are a subset)
+          setAllTags((prev) => {
+            const set = new Set(prev);
+            for (const img of data.images) {
+              for (const t of img.tags) set.add(t);
+            }
+            return set.size === prev.length ? prev : Array.from(set).sort();
+          });
+        }
       } catch (err) {
         console.error(err);
-        setError("Unable to reach the server. Please check your connection.");
+        if (!cancelled) {
+          setError("Unable to reach the server. Please check your connection.");
+        }
       } finally {
-        setInitialLoading(false);
+        if (!cancelled) {
+          setInitialLoading(false);
+        }
       }
     }
     loadInitial();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [tagsParam]);
 
   // Load more images for infinite scroll
   const loadMore = useCallback(async () => {
@@ -40,7 +69,7 @@ export function useImages() {
 
     try {
       const res = await fetch(
-        `/api/v1/images?page=${page}&perPage=${PER_PAGE}`,
+        `/api/v1/images?page=${page}&perPage=${PER_PAGE}${tagsParam}`,
       );
       if (!res.ok) throw new Error("Failed to load images");
       const data: PaginatedResponse = await res.json();
@@ -51,6 +80,14 @@ export function useImages() {
       });
       setHasMore(data.hasMore);
       setPage((p) => p + 1);
+      // Grow tag list with newly loaded images
+      setAllTags((prev) => {
+        const set = new Set(prev);
+        for (const img of data.images) {
+          for (const t of img.tags) set.add(t);
+        }
+        return set.size === prev.length ? prev : Array.from(set).sort();
+      });
     } catch (err) {
       console.error(err);
       setError("Unable to reach the server. Please check your connection.");
@@ -58,23 +95,38 @@ export function useImages() {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [page, hasMore]);
+  }, [page, hasMore, tagsParam]);
 
   // Prepend a newly uploaded image
   const addImage = useCallback((img: Image) => {
     setImages((prev) => [img, ...prev]);
+    setAllTags((prev) => {
+      const set = new Set(prev);
+      for (const t of img.tags) set.add(t);
+      return set.size === prev.length ? prev : Array.from(set).sort();
+    });
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
 
+  const addTags = useCallback((tags: string[]) => {
+    setAllTags((prev) => {
+      const set = new Set(prev);
+      for (const t of tags) set.add(t);
+      return set.size === prev.length ? prev : Array.from(set).sort();
+    });
+  }, []);
+
   return {
     images,
+    allTags,
     loading,
     initialLoading,
     hasMore,
     error,
     loadMore,
     addImage,
+    addTags,
     clearError,
   };
 }

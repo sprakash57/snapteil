@@ -55,17 +55,20 @@ func (imageService *ImageService) normalizeImage(img image.Image) image.Image {
 	return imaging.Resize(img, 0, maxDim, imaging.Lanczos)
 }
 
-func (imageService *ImageService) GetPaginated(page, perPage int, tag string) models.PaginatedResponse {
+func (imageService *ImageService) GetPaginated(page, perPage int, tags []string) models.PaginatedResponse {
 	imageService.mu.RLock()
 	defer imageService.mu.RUnlock()
 
-	// Filter by tag if provided, otherwise use all images
+	// Filter by tags if provided, otherwise use all images
 	filtered := imageService.images
-	if tag != "" {
+	if len(tags) > 0 {
 		filtered = make([]models.Image, 0)
 		for _, img := range imageService.images {
-			if slices.Contains(img.Tags, tag) {
-				filtered = append(filtered, img)
+			for _, tag := range tags {
+				if slices.Contains(img.Tags, tag) {
+					filtered = append(filtered, img)
+					break
+				}
 			}
 		}
 	}

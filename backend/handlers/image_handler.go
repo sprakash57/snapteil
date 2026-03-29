@@ -45,7 +45,7 @@ func GetInitialImagesHandler() fiber.Handler {
 //	@Produce		json
 //	@Param			page	query	int	false	"Page number (default: 1)"
 //	@Param			perPage	query	int	false	"Items per page (default: 5, max: 20)"
-//	@Param			tag	query	string	false	"Filter by tag"
+//	@Param			tags	query	string	false	"Comma-separated tags to filter by"
 //	@Success		200	{object}	models.PaginatedResponse
 //	@Failure		400	{object}	models.ErrorResponse
 //	@Failure		500	{object}	models.ErrorResponse
@@ -54,13 +54,23 @@ func GetImages(imageService *services.ImageService) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		page, _ := strconv.Atoi(c.Query("page", "1"))
 		perPage, _ := strconv.Atoi(c.Query("perPage", "5"))
-		tag := c.Query("tag", "")
+		tagsParam := c.Query("tags", "")
+
+		var tags []string
+		if tagsParam != "" {
+			for _, t := range strings.Split(tagsParam, ",") {
+				t = strings.TrimSpace(t)
+				if t != "" {
+					tags = append(tags, t)
+				}
+			}
+		}
 
 		if page < 1 || perPage < 1 || perPage > 20 {
 			return fiber.NewError(fiber.StatusBadRequest, "Invalid pagination parameters")
 		}
 
-		resp := imageService.GetPaginated(page, perPage, tag)
+		resp := imageService.GetPaginated(page, perPage, tags)
 		return c.JSON(resp)
 	}
 }

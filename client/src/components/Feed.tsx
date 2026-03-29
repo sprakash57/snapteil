@@ -1,5 +1,6 @@
 import type { Image } from "../types";
 import ImageCard from "./ImageCard";
+import TagFilter from "./TagFilter";
 import Loader from "./common/Loader";
 import ErrorIcon from "../assets/error.svg";
 
@@ -9,6 +10,9 @@ interface FeedProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  allTags: string[];
+  selectedTags: string[];
+  onTagsChange: (tags: string[]) => void;
 }
 
 export default function Feed({
@@ -17,9 +21,19 @@ export default function Feed({
   loading,
   error,
   onRetry,
+  allTags,
+  selectedTags,
+  onTagsChange,
 }: FeedProps) {
   return (
     <main className="flex-1 overflow-y-auto py-6">
+      <div className="max-w-3xl mx-auto px-6 mb-4">
+        <TagFilter
+          allTags={allTags}
+          selectedTags={selectedTags}
+          onChange={onTagsChange}
+        />
+      </div>
       {error && images.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-24 px-4 text-center gap-8">
           <img src={ErrorIcon} alt="Error" width={100} height={100} />

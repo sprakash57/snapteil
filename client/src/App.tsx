@@ -12,28 +12,43 @@ import type { Image } from "./types";
 function App() {
   const [showUpload, setShowUpload] = useState(false);
   const [pendingImages, setPendingImages] = useState<Image[]>([]);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
   const {
     images,
+    allTags,
     loading,
     initialLoading,
     hasMore,
     error,
     loadMore,
     addImage,
+    addTags,
     clearError,
-  } = useImages();
+  } = useImages(filterTags);
   const scrollRef = useInfiniteScroll(loadMore, hasMore, loading);
   const imagesRef = useRef(images);
+  const filterTagsRef = useRef(filterTags);
 
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
 
+  useEffect(() => {
+    filterTagsRef.current = filterTags;
+  }, [filterTags]);
+
   // Skip images already in the feed (uploaded by this client)
+  // Also skip if filter is active and image doesn't match any active tag
   useWebSocket(
     useCallback((img: Image) => {
-      // If this image is already rendered (uploader's own upload), skip
       if (imagesRef.current.some((i) => i.id === img.id)) return;
+      const activeTags = filterTagsRef.current;
+      if (
+        activeTags.length > 0 &&
+        !activeTags.some((t) => img.tags.includes(t))
+      ) {
+        return;
+      }
       setPendingImages((prev) => {
         if (prev.some((p) => p.id === img.id)) return prev;
         return [img, ...prev];
@@ -41,8 +56,20 @@ function App() {
     }, []),
   );
 
+  // Clear pending when filter changes — handled inside setFilterTags wrapper
+  function handleTagsChange(tags: string[]) {
+    setFilterTags(tags);
+    setPendingImages([]);
+  }
+
   function handleUpload(img: Image) {
-    addImage(img);
+    // Always register new tags so they appear in the dropdown
+    addTags(img.tags);
+    // Only add to visible feed if it matches the active filter (or no filter)
+    const active = filterTagsRef.current;
+    if (active.length === 0 || active.some((t) => img.tags.includes(t))) {
+      addImage(img);
+    }
     // Remove from pending in case WS arrived first
     setPendingImages((prev) => prev.filter((p) => p.id !== img.id));
   }
@@ -99,6 +126,9 @@ function App() {
             clearError();
             loadMore();
           }}
+          allTags={allTags}
+          selectedTags={filterTags}
+          onTagsChange={handleTagsChange}
         />
       )}
 

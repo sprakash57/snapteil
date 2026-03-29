@@ -1,4 +1,4 @@
-import { type FormEvent, useRef, useState } from "react";
+import { type SyntheticEvent, useRef, useState } from "react";
 import type { Image } from "../types";
 
 interface UploadModalProps {
@@ -11,7 +11,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -27,6 +27,16 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
     }
     if (!file || file.size === 0) {
       setError("Please select an image");
+      return;
+    }
+
+    const rawTags = (formData.get("tags") as string) ?? "";
+    const tagCount = rawTags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean).length;
+    if (tagCount > 5) {
+      setError("Maximum 5 tags allowed");
       return;
     }
 
