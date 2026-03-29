@@ -2,6 +2,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocket } from "@/features/websocket/useWebSocket";
 import type { Image } from "@/lib/types";
 
+function matchesFilters(image: Image, activeTags: string[]) {
+  return (
+    activeTags.length === 0 ||
+    activeTags.some((tag) => image.tags.includes(tag))
+  );
+}
+
+function addPendingImage(prev: Image[], nextImage: Image) {
+  if (prev.some((pendingImage) => pendingImage.id === nextImage.id)) {
+    return prev;
+  }
+
+  return [nextImage, ...prev];
+}
+
 export function usePendingImages(
   images: Image[],
   filterTags: string[],
@@ -10,6 +25,7 @@ export function usePendingImages(
   const [pendingImages, setPendingImages] = useState<Image[]>([]);
   const imagesRef = useRef(images);
   const filterTagsRef = useRef(filterTags);
+  const addImageRef = useRef(addImage);
 
   useEffect(() => {
     imagesRef.current = images;
@@ -19,56 +35,59 @@ export function usePendingImages(
     filterTagsRef.current = filterTags;
   }, [filterTags]);
 
-  // Queue incoming WS images as pending (skip own uploads + filtered-out tags)
-  useWebSocket(
-    useCallback((img: Image) => {
-      if (imagesRef.current.some((i) => i.id === img.id)) return;
-      const activeTags = filterTagsRef.current;
-      if (
-        activeTags.length > 0 &&
-        !activeTags.some((t) => img.tags.includes(t))
-      ) {
-        return;
-      }
-      setPendingImages((prev) => {
-        if (prev.some((p) => p.id === img.id)) return prev;
-        return [img, ...prev];
-      });
-    }, []),
-  );
-
-  const flush = useCallback(() => {
-    setPendingImages((prev) => {
-      prev.forEach(addImage);
-      return [];
-    });
+  useEffect(() => {
+    addImageRef.current = addImage;
   }, [addImage]);
 
-  const clear = useCallback(() => setPendingImages([]), []);
+  const queuePendingImage = useCallback((img: Image) => {
+    if (!matchesFilters(img, filterTagsRef.current)) return;
+    if (imagesRef.current.some((existingImage) => existingImage.id === img.id)) {
+      return;
+    }
 
-  const handleBannerClick = useCallback(() => {
-    flush();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [flush]);
+    setPendingImages((prev) => addPendingImage(prev, img));
+  }, []);
+
+  const flushPendingImages = useCallback(() => {
+    setPendingImages((prev) => {
+      if (prev.length === 0) return prev;
+
+      for (const img of [...prev].reverse()) {
+        addImageRef.current(img);
+      }
+
+      return [];
+    });
+  }, []);
+
+  useWebSocket(queuePendingImage);
 
   // Auto-flush when user scrolls to top
   useEffect(() => {
     function onScroll() {
       if (window.scrollY === 0) {
-        setPendingImages((prev) => {
-          if (prev.length === 0) return prev;
-          prev.forEach(addImage);
-          return [];
-        });
+        flushPendingImages();
       }
     }
+
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [addImage]);
+  }, [flushPendingImages]);
 
-  const removePending = useCallback((id: string) => {
-    setPendingImages((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+  function clear() {
+    setPendingImages([]);
+  }
+
+  function handleBannerClick() {
+    flushPendingImages();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function removePending(id: string) {
+    setPendingImages((prev) =>
+      prev.filter((pendingImage) => pendingImage.id !== id),
+    );
+  }
 
   return { pendingImages, handleBannerClick, clear, removePending };
 }

@@ -1,4 +1,10 @@
-import { type SyntheticEvent, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import type { Image } from "@/lib/types";
 import Loader from "@/components/Loader";
 
@@ -10,9 +16,37 @@ interface UploadModalProps {
 export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const titleId = useId();
+  const tagsId = useId();
+  const fileId = useId();
+  const headingId = useId();
+  const descriptionId = useId();
+  const errorId = useId();
 
-  async function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const originalOverflow = document.body.style.overflow;
+
+    titleInputRef.current?.focus();
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [onClose]);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -86,24 +120,47 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
       <div
         className="w-full max-w-md mx-4 rounded-2xl bg-[#e0e5ec] p-6"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={headingId}
+        aria-describedby={descriptionId}
       >
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">
+        <h2
+          id={headingId}
+          className="text-lg font-semibold text-gray-700 mb-2"
+        >
           Upload Image
         </h2>
+        <p id={descriptionId} className="mb-4 text-sm text-gray-500">
+          Add a title, optional tags, and an image file to publish a new post.
+        </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            name="title"
-            placeholder="Title"
-            maxLength={100}
-            className="px-4 py-2.5 rounded-xl bg-[#e0e5ec] text-gray-700 placeholder-gray-400 shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] outline-none focus:shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff]"
-          />
-
-          <div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={titleId} className="text-sm font-medium text-gray-600">
+              Title
+            </label>
             <input
+              ref={titleInputRef}
+              id={titleId}
+              name="title"
+              placeholder="City lights after rain"
+              maxLength={100}
+              required
+              aria-describedby={error ? errorId : undefined}
+              className="px-4 py-2.5 rounded-xl bg-[#e0e5ec] text-gray-700 placeholder-gray-400 shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] outline-none focus:shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff]"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={tagsId} className="text-sm font-medium text-gray-600">
+              Tags
+            </label>
+            <input
+              id={tagsId}
               name="tags"
-              maxLength={24}
-              placeholder="Tags: nature, street-fight (max 5)"
+              placeholder="nature, street-fight, portrait"
+              aria-describedby={error ? errorId : undefined}
               className="w-full px-4 py-2.5 rounded-xl bg-[#e0e5ec] text-gray-700 placeholder-gray-400 shadow-[inset_3px_3px_6px_#b8b9be,inset_-3px_-3px_6px_#ffffff] outline-none focus:shadow-[inset_4px_4px_8px_#b8b9be,inset_-4px_-4px_8px_#ffffff]"
             />
             <p className="mt-1 text-xs text-gray-400">
@@ -111,15 +168,26 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
             </p>
           </div>
 
-          <input
-            ref={fileRef}
-            name="file"
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml"
-            className="text-sm p-2 text-gray-600 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-[#e0e5ec] file:text-gray-700 file:shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] file:cursor-pointer"
-          />
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={fileId} className="text-sm font-medium text-gray-600">
+              Image File
+            </label>
+            <input
+              id={fileId}
+              name="file"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml"
+              required
+              aria-describedby={error ? errorId : undefined}
+              className="text-sm p-2 text-gray-600 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-[#e0e5ec] file:text-gray-700 file:shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] file:cursor-pointer"
+            />
+          </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <p id={errorId} role="alert" className="text-red-500 text-sm">
+              {error}
+            </p>
+          )}
 
           <div className="flex justify-end gap-3 mt-2">
             <button
