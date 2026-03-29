@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import Header from "./components/Header";
-import Feed from "./features/feed/Feed";
-import UploadModal from "./features/upload/UploadModal";
-import NewPostBanner from "./features/notifications/NewPostBanner";
-import { useImages } from "./features/feed/useImages";
-import { useInfiniteScroll } from "./features/feed/useInfiniteScroll";
-import { useWebSocket } from "./features/websocket/useWebSocket";
-import Loader from "./components/Loader";
-import type { Image } from "./lib/types";
+import { useState } from "react";
+import Header from "@/components/Header";
+import Feed from "@/features/feed/Feed";
+import UploadModal from "@/features/upload/UploadModal";
+import NewPostBanner from "@/features/notifications/NewPostBanner";
+import { useImages } from "@/features/feed/useImages";
+import { useInfiniteScroll } from "@/features/feed/useInfiniteScroll";
+import { usePendingImages } from "@/features/notifications/usePendingImages";
+import Loader from "@/components/Loader";
+import type { Image } from "@/lib/types";
 
 function App() {
   const [showUpload, setShowUpload] = useState(false);
-  const [pendingImages, setPendingImages] = useState<Image[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const {
     images,
@@ -25,81 +24,31 @@ function App() {
     addTags,
     clearError,
   } = useImages(filterTags);
+
   const scrollRef = useInfiniteScroll(loadMore, hasMore, loading);
-  const imagesRef = useRef(images);
-  const filterTagsRef = useRef(filterTags);
+  // Pending images from websocket that haven't been added to feed yet (due to filters or own uploads)
+  const {
+    pendingImages,
+    handleBannerClick,
+    clear: clearPending,
+    removePending,
+  } = usePendingImages(images, filterTags, addImage);
 
-  useEffect(() => {
-    imagesRef.current = images;
-  }, [images]);
-
-  useEffect(() => {
-    filterTagsRef.current = filterTags;
-  }, [filterTags]);
-
-  // Skip images already in the feed (uploaded by this client)
-  // Also skip if filter is active and image doesn't match any active tag
-  useWebSocket(
-    useCallback((img: Image) => {
-      if (imagesRef.current.some((i) => i.id === img.id)) return;
-      const activeTags = filterTagsRef.current;
-      if (
-        activeTags.length > 0 &&
-        !activeTags.some((t) => img.tags.includes(t))
-      ) {
-        return;
-      }
-      setPendingImages((prev) => {
-        if (prev.some((p) => p.id === img.id)) return prev;
-        return [img, ...prev];
-      });
-    }, []),
-  );
-
-  // Clear pending when filter changes — handled inside setFilterTags wrapper
   function handleTagsChange(tags: string[]) {
     setFilterTags(tags);
-    setPendingImages([]);
+    clearPending();
   }
 
   function handleUpload(img: Image) {
-    // Always register new tags so they appear in the dropdown
     addTags(img.tags);
-    // Only add to visible feed if it matches the active filter (or no filter)
-    const active = filterTagsRef.current;
-    if (active.length === 0 || active.some((t) => img.tags.includes(t))) {
+    if (
+      filterTags.length === 0 ||
+      filterTags.some((t) => img.tags.includes(t))
+    ) {
       addImage(img);
     }
-    // Remove from pending in case WS arrived first
-    setPendingImages((prev) => prev.filter((p) => p.id !== img.id));
+    removePending(img.id);
   }
-
-  function flushPending() {
-    setPendingImages((prev) => {
-      prev.forEach(addImage);
-      return [];
-    });
-  }
-
-  function handleBannerClick() {
-    flushPending();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  // Dismiss banner and load images when user scrolls to top
-  useEffect(() => {
-    function onScroll() {
-      if (window.scrollY === 0) {
-        setPendingImages((prev) => {
-          if (prev.length === 0) return prev;
-          prev.forEach(addImage);
-          return [];
-        });
-      }
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [addImage]);
 
   return (
     <div className="min-h-screen bg-[#e0e5ec] flex flex-col">
