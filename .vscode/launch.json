@@ -2,14 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug client",
+      "name": "Client",
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:5173",
       "webRoot": "${workspaceFolder}/client"
     },
     {
-      "name": "Debug Backend",
+      "name": "Backend",
       "type": "go",
       "request": "launch",
       "mode": "debug",

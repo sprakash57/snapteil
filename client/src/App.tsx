@@ -1,31 +1,35 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "./assets/vite.svg";
-import heroImg from "./assets/hero.png";
+import Header from "./components/Header";
+import Feed from "./components/Feed";
+import UploadModal from "./components/UploadModal";
+import { useImages } from "./hooks/useImages";
+import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [showUpload, setShowUpload] = useState(false);
+  const { images, loading, initialLoading, hasMore, loadMore, addImage } =
+    useImages();
+  const sentinelRef = useInfiniteScroll(loadMore, hasMore, loading);
 
   return (
-    <section id="center">
-      <div className="bg-amber-200">
-        <img src={heroImg} className="base" width="170" height="179" alt="" />
-        <img src={reactLogo} className="framework" alt="React logo" />
-        <img src={viteLogo} className="vite" alt="Vite logo" />
-      </div>
-      <div>
-        <h1>Get started</h1>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-        </p>
-      </div>
-      <button
-        className="counter"
-        onClick={() => setCount((count) => count + 1)}
-      >
-        Count is {count}
-      </button>
-    </section>
+    <div className="min-h-screen bg-[#e0e5ec] flex flex-col">
+      <Header onUploadClick={() => setShowUpload(true)} />
+
+      {initialLoading ? (
+        <div className="flex-1 flex items-center justify-center text-gray-500">
+          Loading...
+        </div>
+      ) : (
+        <Feed images={images} sentinelRef={sentinelRef} loading={loading} />
+      )}
+
+      {showUpload && (
+        <UploadModal
+          onClose={() => setShowUpload(false)}
+          onUploaded={addImage}
+        />
+      )}
+    </div>
   );
 }
 
