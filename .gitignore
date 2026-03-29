@@ -17,3 +17,5 @@
 
 /client/.vscode/*
 !/client/.vscode/extensions.json
+
+.DS_Store

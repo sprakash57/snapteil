@@ -7,8 +7,16 @@ import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 
 function App() {
   const [showUpload, setShowUpload] = useState(false);
-  const { images, loading, initialLoading, hasMore, loadMore, addImage } =
-    useImages();
+  const {
+    images,
+    loading,
+    initialLoading,
+    hasMore,
+    error,
+    loadMore,
+    addImage,
+    clearError,
+  } = useImages();
   const sentinelRef = useInfiniteScroll(loadMore, hasMore, loading);
 
   return (
@@ -20,7 +28,16 @@ function App() {
           Loading...
         </div>
       ) : (
-        <Feed images={images} sentinelRef={sentinelRef} loading={loading} />
+        <Feed
+          images={images}
+          sentinelRef={sentinelRef}
+          loading={loading}
+          error={error}
+          onRetry={() => {
+            clearError();
+            loadMore();
+          }}
+        />
       )}
 
       {showUpload && (
