@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Image, PaginatedResponse } from "../types";
+import type { Image, PaginatedResponse } from "../../lib/types";
 
 const PER_PAGE = 5;
 

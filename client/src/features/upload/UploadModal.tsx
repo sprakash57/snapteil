@@ -1,5 +1,6 @@
 import { type SyntheticEvent, useRef, useState } from "react";
-import type { Image } from "../types";
+import type { Image } from "../../lib/types";
+import Loader from "../../components/Loader";
 
 interface UploadModalProps {
   onClose: () => void;
@@ -131,9 +132,9 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
             <button
               type="submit"
               disabled={uploading}
-              className="px-5 py-2 rounded-xl text-sm font-medium text-white bg-gray-600 shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] hover:bg-gray-700 disabled:opacity-50 transition-all cursor-pointer"
+              className="px-5 py-2 rounded-xl text-sm font-medium text-white bg-gray-600 shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] hover:bg-gray-700 disabled:opacity-50 transition-all cursor-pointer min-w-20 flex items-center justify-center gap-2"
             >
-              {uploading ? "Uploading..." : "Upload"}
+              {uploading ? <Loader size="sm" shadow={false} /> : "Upload"}
             </button>
           </div>
         </form>

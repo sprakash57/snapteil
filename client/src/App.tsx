@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Header from "./components/Header";
-import Feed from "./components/Feed";
-import UploadModal from "./components/UploadModal";
-import NewPostBanner from "./components/NewPostBanner";
-import { useImages } from "./hooks/useImages";
-import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
-import { useWebSocket } from "./hooks/useWebSocket";
-import Loader from "./components/common/Loader";
-import type { Image } from "./types";
+import Feed from "./features/feed/Feed";
+import UploadModal from "./features/upload/UploadModal";
+import NewPostBanner from "./features/notifications/NewPostBanner";
+import { useImages } from "./features/feed/useImages";
+import { useInfiniteScroll } from "./features/feed/useInfiniteScroll";
+import { useWebSocket } from "./features/websocket/useWebSocket";
+import Loader from "./components/Loader";
+import type { Image } from "./lib/types";
 
 function App() {
   const [showUpload, setShowUpload] = useState(false);

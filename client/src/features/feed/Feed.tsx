@@ -1,8 +1,8 @@
-import type { Image } from "../types";
+import type { Image } from "../../lib/types";
 import ImageCard from "./ImageCard";
 import TagFilter from "./TagFilter";
-import Loader from "./common/Loader";
-import ErrorIcon from "../assets/error.svg";
+import Loader from "../../components/Loader";
+import ErrorIcon from "../../assets/error.svg";
 
 interface FeedProps {
   images: Image[];
@@ -69,7 +69,7 @@ export default function Feed({
           {/* Infinite scroll sentinel */}
           <div ref={scrollRef} className="h-1" />
 
-          {loading && <Loader />}
+          {loading && <Loader className="py-6" />}
         </div>
       )}
     </main>

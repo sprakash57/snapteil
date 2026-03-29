@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import type { Image } from "../types";
+import type { Image } from "../../lib/types";
 
 const WS_RECONNECT_DELAY = 3000;
 
