@@ -6,7 +6,6 @@ import ErrorIcon from "../assets/error.svg";
 interface FeedProps {
   images: Image[];
   scrollRef: React.RefObject<HTMLDivElement | null>;
-  feedRef: React.RefObject<HTMLElement | null>;
   loading: boolean;
   error: string | null;
   onRetry: () => void;
@@ -15,13 +14,12 @@ interface FeedProps {
 export default function Feed({
   images,
   scrollRef,
-  feedRef,
   loading,
   error,
   onRetry,
 }: FeedProps) {
   return (
-    <main ref={feedRef} className="flex-1 overflow-y-auto py-6">
+    <main className="flex-1 overflow-y-auto py-6">
       {error && images.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center py-24 px-4 text-center gap-8">
           <img src={ErrorIcon} alt="Error" width={100} height={100} />
