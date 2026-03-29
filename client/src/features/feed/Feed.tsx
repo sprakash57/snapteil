@@ -1,8 +1,8 @@
-import type { Image } from "../../lib/types";
-import ImageCard from "./ImageCard";
-import TagFilter from "./TagFilter";
-import Loader from "../../components/Loader";
-import ErrorIcon from "../../assets/error.svg";
+import type { Image } from "@/lib/types";
+import Loader from "@/components/Loader";
+import ErrorIcon from "@/assets/error.svg";
+import ImageCard from "@/features/feed/ImageCard";
+import TagFilter from "@/features/feed/TagFilter";
 
 interface FeedProps {
   images: Image[];

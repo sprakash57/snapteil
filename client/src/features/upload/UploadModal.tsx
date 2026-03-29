@@ -1,6 +1,6 @@
 import { type SyntheticEvent, useRef, useState } from "react";
-import type { Image } from "../../lib/types";
-import Loader from "../../components/Loader";
+import type { Image } from "@/lib/types";
+import Loader from "@/components/Loader";
 
 interface UploadModalProps {
   onClose: () => void;

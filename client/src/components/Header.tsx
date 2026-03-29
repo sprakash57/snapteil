@@ -1,5 +1,5 @@
-import LogoSvg from "../assets/logo.svg";
-import PlusSvg from "../assets/plus.svg";
+import LogoSvg from "@/assets/logo.svg";
+import PlusSvg from "@/assets/plus.svg";
 
 interface HeaderProps {
   onUploadClick: () => void;
