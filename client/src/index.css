@@ -7,3 +7,23 @@ body {
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
 }
+
+@layer components {
+  .animate-loader {
+    animation-name: loaderBounce;
+    animation-duration: 0.7s;
+    animation-timing-function: cubic-bezier(0.33, 0, 0.66, 1);
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-delay: var(--loader-delay, 0s);
+  }
+
+  @keyframes loaderBounce {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-18px);
+    }
+  }
+}

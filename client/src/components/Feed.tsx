@@ -1,10 +1,11 @@
 import type { Image } from "../types";
 import ImageCard from "./ImageCard";
+import Loader from "./common/Loader";
 import ErrorIcon from "../assets/error.svg";
 
 interface FeedProps {
   images: Image[];
-  sentinelRef: React.RefObject<HTMLDivElement | null>;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
   loading: boolean;
   error: string | null;
   onRetry: () => void;
@@ -12,7 +13,7 @@ interface FeedProps {
 
 export default function Feed({
   images,
-  sentinelRef,
+  scrollRef,
   loading,
   error,
   onRetry,
@@ -52,11 +53,9 @@ export default function Feed({
           )}
 
           {/* Infinite scroll sentinel */}
-          <div ref={sentinelRef} className="h-1" />
+          <div ref={scrollRef} className="h-1" />
 
-          {loading && (
-            <div className="py-4 text-gray-500 text-sm">Loading more...</div>
-          )}
+          {loading && <Loader />}
         </div>
       )}
     </main>
