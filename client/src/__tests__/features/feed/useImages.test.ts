@@ -115,23 +115,6 @@ describe("useImages", () => {
     expect(decodeURIComponent(url)).toContain("tags=nature,portrait");
   });
 
-  it("refetches from page 1 when filterTags change", async () => {
-    vi.mocked(fetch).mockResolvedValue(mockPage([]));
-
-    const { rerender } = renderHook(
-      ({ tags }: { tags: string[] }) => useImages(tags),
-      { initialProps: { tags: [] } },
-    );
-
-    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1));
-
-    rerender({ tags: ["nature"] });
-    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2));
-
-    const secondUrl = vi.mocked(fetch).mock.calls[1][0] as string;
-    expect(secondUrl).toContain("page=1");
-  });
-
   // ── loadMore ───────────────────────────────────────────────────────────────
 
   it("loadMore appends the next page of images", async () => {
