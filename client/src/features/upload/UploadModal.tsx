@@ -1,10 +1,4 @@
-import {
-  type FormEvent,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
 import type { Image } from "@/lib/types";
 import Loader from "@/components/Loader";
 
@@ -46,7 +40,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
     };
   }, [onClose]);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -125,10 +119,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
         aria-labelledby={headingId}
         aria-describedby={descriptionId}
       >
-        <h2
-          id={headingId}
-          className="text-lg font-semibold text-gray-700 mb-2"
-        >
+        <h2 id={headingId} className="text-lg font-semibold text-gray-700 mb-2">
           Upload Image
         </h2>
         <p id={descriptionId} className="mb-4 text-sm text-gray-500">
@@ -137,7 +128,10 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={titleId} className="text-sm font-medium text-gray-600">
+            <label
+              htmlFor={titleId}
+              className="text-sm font-medium text-gray-600"
+            >
               Title
             </label>
             <input
@@ -153,7 +147,10 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={tagsId} className="text-sm font-medium text-gray-600">
+            <label
+              htmlFor={tagsId}
+              className="text-sm font-medium text-gray-600"
+            >
               Tags
             </label>
             <input
@@ -169,7 +166,10 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor={fileId} className="text-sm font-medium text-gray-600">
+            <label
+              htmlFor={fileId}
+              className="text-sm font-medium text-gray-600"
+            >
               Image File
             </label>
             <input
@@ -193,7 +193,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-sm text-gray-600 bg-[#e0e5ec] shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] hover:shadow-[1px_1px_3px_#b8b9be,-1px_-1px_3px_#ffffff] transition-shadow cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm text-[#FF6347] bg-[#e0e5ec] shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] hover:shadow-[1px_1px_3px_#b8b9be,-1px_-1px_3px_#ffffff] transition-shadow cursor-pointer"
             >
               Cancel
             </button>

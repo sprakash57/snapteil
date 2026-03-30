@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Header from "@/components/Header";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
 import Feed from "@/features/feed/Feed";
 import UploadModal from "@/features/upload/UploadModal";
 import NewPostBanner from "@/features/notifications/NewPostBanner";
@@ -87,6 +88,8 @@ function App() {
           onUploaded={handleUpload}
         />
       )}
+
+      <ScrollToTopButton />
     </div>
   );
 }

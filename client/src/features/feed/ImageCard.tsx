@@ -20,7 +20,7 @@ export default function ImageCard({ image }: ImageCardProps) {
           {image.title}
         </h2>
         {image.tags.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <div className="mt-2 flex flex-wrap gap-2">
             {image.tags.map((tag) => (
               <span
                 key={tag}

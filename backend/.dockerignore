@@ -1,4 +1,7 @@
-uploads/
+.git
+.DS_Store
+.air.toml
+tmp/
 *.exe
 *.test
 *.out

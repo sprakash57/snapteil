@@ -12,7 +12,7 @@ export default function Header({ onUploadClick }: HeaderProps) {
         <div className="flex items-center gap-2">
           <img src={LogoSvg} alt="Snapteil Logo" width="32" height="32" />
           <h1 className="text-2xl italic font-semibold text-gray-700 tracking-wide">
-            Snapteil
+            Sna<span className="text-[#FF6347]">p</span>teil
           </h1>
         </div>
         <button

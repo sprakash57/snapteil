@@ -1,21 +1,24 @@
 # Ignore build artifacts and temporary files of backend service
 /backend/tmp/*
-/backend/uploads/*
-!/backend/uploads/lake.avif
-!/backend/uploads/leaves.jpg
-!/backend/uploads/nature.avif
-!/backend/uploads/path.jpg
-!/backend/uploads/water.jpg
-
-/backend/__debug_bin*
+uploads/*
+!uploads/lake.avif
+!uploads/leaves.jpg
+!uploads/nature.avif
+!uploads/path.jpg
+!uploads/water.jpg
+/bin/
+*.out
+*.log
+__debug_bin*
 
 # Ignore build artifacts and temporary files of frontend client
-/client/node_modules
-/client/dist
-/client/*.local
-/client/npm-debug.log*
-
-/client/.vscode/*
-!/client/.vscode/extensions.json
+node_modules
+dist
+*.local
+npm-debug.log*
+.vscode/*
+!.vscode/extensions.json
 
 .DS_Store
+.env
+.env.*
