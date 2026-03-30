@@ -94,7 +94,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
 
     setUploading(true);
     try {
-      const res = await fetch("/api/v1/images", {
+      const res = await fetch("/api/v1/uploads", {
         method: "POST",
         body: formData,
       });
@@ -176,7 +176,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
               id={fileId}
               name="file"
               type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml"
+              accept="image/jpeg,image/png,image/gif,image/webp"
               required
               aria-describedby={error ? errorId : undefined}
               className="text-sm p-2 text-gray-600 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-[#e0e5ec] file:text-gray-700 file:shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] file:cursor-pointer"

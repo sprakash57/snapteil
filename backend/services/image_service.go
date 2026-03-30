@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
+	_ "image/gif"
 	"image/jpeg"
+	_ "image/png"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -18,6 +20,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sprakash57/snapteil/backend/config"
 	"github.com/sprakash57/snapteil/backend/models"
+	_ "golang.org/x/image/webp"
 )
 
 type ImageService struct {
@@ -80,13 +83,12 @@ func (imageService *ImageService) GetPaginated(page, perPage int, tags []string)
 		return sorted[i].CreatedAt.After(sorted[j].CreatedAt)
 	})
 
-	// Calculate pagination limites
 	total := len(sorted)
 	start := min((page-1)*perPage, total)
-	end := min(start+perPage, total) // ensure end should not go outside of limits
+	end := min(start+perPage, total)
 
 	return models.PaginatedResponse{
-		Images:  sorted[start:end], // slice the page window
+		Images:  sorted[start:end],
 		Total:   total,
 		Page:    page,
 		PerPage: perPage,
@@ -164,7 +166,7 @@ func (imageService *ImageService) ParseTags(str string) []string {
 				cleaned.WriteRune(r)
 			}
 		}
-		tag = strings.Trim(cleaned.String(), "-") // remove leading/trailing hyphens
+		tag = strings.Trim(cleaned.String(), "-")
 		if tag == "" || len(tag) > 24 {
 			continue
 		}

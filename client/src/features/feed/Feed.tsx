@@ -66,9 +66,8 @@ export default function Feed({
             </div>
           )}
 
-          {/* Infinite scroll sentinel */}
+          {/* Infinite scroll div */}
           <div ref={scrollRef} className="h-1" />
-
           {loading && <Loader className="py-6" />}
         </div>
       )}

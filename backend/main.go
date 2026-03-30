@@ -49,7 +49,7 @@ func main() {
 
 	// routes
 	app.Get("/uploads/*", static.New("./uploads"))
-	routes.WebSocketRoute(app, socketService)
+	routes.SetupSocketV1(app, socketService)
 	routes.SetupApiV1(app, imageService, socketService)
 
 	log.Fatal(app.Listen(":" + cfg.Port))

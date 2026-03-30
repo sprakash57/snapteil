@@ -8,11 +8,17 @@ import (
 func SetupApiV1(app *fiber.App, imageService *services.ImageService, socket *services.SocketService) {
 	apiV1 := app.Group("/api/v1")
 
-	HealthRoute(apiV1)
-	ImageRoute(apiV1, imageService, socket)
+	HealthRouteV1(apiV1)
+	ImageRouteV1(apiV1, imageService)
+	UploadRouteV1(apiV1, imageService, socket)
 
 	// 404 catch-all
 	app.Use(func(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, "route not found")
 	})
+}
+
+func SetupSocketV1(app *fiber.App, socket *services.SocketService) {
+	// WebSocket route for real-time updates
+	WebSocketRouteV1(app, socket)
 }

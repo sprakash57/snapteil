@@ -5,6 +5,6 @@ import (
 	"github.com/sprakash57/snapteil/backend/handlers"
 )
 
-func HealthRoute(router fiber.Router) {
+func HealthRouteV1(router fiber.Router) {
 	router.Get("/health", handlers.CheckHealthHandler())
 }
