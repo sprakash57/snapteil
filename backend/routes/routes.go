@@ -2,10 +2,11 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v3"
+	"github.com/sprakash57/snapteil/backend/config"
 	"github.com/sprakash57/snapteil/backend/services"
 )
 
-func SetupApiV1(app *fiber.App, imageService *services.ImageService, socket *services.SocketService) {
+func SetupApiV1(app *fiber.App, imageService *services.ImageService, socket *services.SocketService, cfg config.Config) {
 	apiV1 := app.Group("/api/v1")
 
 	HealthRouteV1(apiV1)
@@ -18,7 +19,7 @@ func SetupApiV1(app *fiber.App, imageService *services.ImageService, socket *ser
 	})
 }
 
-func SetupSocketV1(app *fiber.App, socket *services.SocketService) {
+func SetupSocketV1(app *fiber.App, socket *services.SocketService, cfg config.Config) {
 	// WebSocket route for real-time updates
-	WebSocketRouteV1(app, socket)
+	WebSocketRouteV1(app, socket, cfg.AllowedOrigins)
 }

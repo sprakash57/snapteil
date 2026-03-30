@@ -1,52 +1,52 @@
 [
   {
     "id": "1",
-    "title": "Serene Lake",
-    "tags": ["nature", "lake", "landscape"],
-    "filename": "lake.avif",
-    "url": "/uploads/lake.avif",
-    "width": 740,
-    "height": 1113,
-    "createdAt": "2026-03-27T10:00:00Z"
+    "title": "I am vengeance.",
+    "tags": ["superhero", "game"],
+    "filename": "arkham.gif",
+    "url": "/uploads/arkham.gif",
+    "width": 400,
+    "height": 225,
+    "createdAt": "2026-03-27T09:00:00Z"
   },
   {
     "id": "2",
-    "title": "Autumn Leaves",
-    "tags": ["nature", "leaves", "autumn"],
-    "filename": "leaves.jpg",
-    "url": "/uploads/leaves.jpg",
-    "width": 768,
-    "height": 512,
-    "createdAt": "2026-03-27T10:01:00Z"
+    "title": "Work together. Win faster.",
+    "tags": ["software", "machinery"],
+    "filename": "bowatt.webp",
+    "url": "/uploads/bowatt.webp",
+    "width": 200,
+    "height": 200,
+    "createdAt": "2026-03-27T11:01:00Z"
   },
   {
     "id": "3",
-    "title": "Into Nature",
-    "tags": ["nature", "forest", "landscape"],
-    "filename": "nature.avif",
-    "url": "/uploads/nature.avif",
-    "width": 3000,
-    "height": 4500,
-    "createdAt": "2026-03-27T10:02:00Z"
+    "title": "Winter is coming.",
+    "tags": ["tv", "fantasy"],
+    "filename": "got.avif",
+    "url": "/uploads/got.avif",
+    "width": 320,
+    "height": 480,
+    "createdAt": "2026-03-27T08:02:00Z"
   },
   {
     "id": "4",
-    "title": "Forest Path",
-    "tags": ["nature", "path", "forest"],
-    "filename": "path.jpg",
-    "url": "/uploads/path.jpg",
-    "width": 1080,
-    "height": 1920,
-    "createdAt": "2026-03-27T10:03:00Z"
+    "title": "Kakashi Hatake",
+    "tags": ["naruto", "anime"],
+    "filename": "naruto.jpg",
+    "url": "/uploads/naruto.jpg",
+    "width": 840,
+    "height": 755,
+    "createdAt": "2026-03-27T07:03:00Z"
   },
   {
     "id": "5",
-    "title": "Flowing Water",
-    "tags": ["nature", "water", "river"],
-    "filename": "water.jpg",
-    "url": "/uploads/water.jpg",
-    "width": 2935,
-    "height": 4402,
-    "createdAt": "2026-03-27T10:04:00Z"
+    "title": "Fus Ro Dah!",
+    "tags": ["skyrim", "game"],
+    "filename": "skyrim.jpg",
+    "url": "/uploads/skyrim.jpg",
+    "width": 1529,
+    "height": 1898,
+    "createdAt": "2026-03-27T06:04:00Z"
   }
 ]

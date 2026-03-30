@@ -17,7 +17,7 @@ import (
 //	@Produce		json
 //	@Param			title	formData	string	true	"Image title"
 //	@Param			tags	formData	string	false	"Comma-separated tags"
-//	@Param			file	formData	file	true	"Image file (JPEG, PNG, GIF, WebP, AVIF, SVG)"
+//	@Param			file	formData	file	true	"Image file (JPEG, PNG, GIF, WebP, AVIF)"
 //	@Success		201	{object}	models.Image
 //	@Failure		400	{object}	models.ErrorResponse
 //	@Failure		500	{object}	models.ErrorResponse
@@ -46,11 +46,13 @@ func UploadImage(imageService *services.ImageService, socket *services.SocketSer
 			return fiber.NewError(fiber.StatusRequestEntityTooLarge, "file size exceeds limit")
 		}
 
-		if !imageService.IsValidImageType(file.Header.Get("Content-Type")) {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid file type; accepted: JPEG, PNG, GIF, WebP, AVIF, SVG")
+		contentType, err := imageService.ResolveImageType(file)
+		if err != nil {
+			log.Printf("Upload validation failed: %v", err)
+			return fiber.NewError(fiber.StatusBadRequest, "invalid or unsupported image file")
 		}
 
-		record, err := imageService.Upload(file, title, tags)
+		record, err := imageService.Upload(file, title, tags, contentType)
 		if err != nil {
 			log.Printf("Upload failed: %v", err)
 			return fiber.NewError(fiber.StatusInternalServerError, "failed to process image")

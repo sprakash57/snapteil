@@ -166,17 +166,11 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor={fileId}
-              className="text-sm font-medium text-gray-600"
-            >
-              Image File
-            </label>
             <input
               id={fileId}
               name="file"
               type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml"
+              accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
               required
               aria-describedby={error ? errorId : undefined}
               className="text-sm p-2 text-gray-600 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-[#e0e5ec] file:text-gray-700 file:shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] file:cursor-pointer"
@@ -184,7 +178,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
           </div>
 
           {error && (
-            <p id={errorId} role="alert" className="text-red-500 text-sm">
+            <p id={errorId} role="alert" className="text-[#FF6347] text-sm">
               {error}
             </p>
           )}
@@ -200,7 +194,7 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
             <button
               type="submit"
               disabled={uploading}
-              className="px-5 py-2 rounded-xl text-sm font-medium text-white bg-gray-600 shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] hover:bg-gray-700 disabled:opacity-50 transition-all cursor-pointer min-w-20 flex items-center justify-center gap-2"
+              className="px-5 py-2 rounded-xl text-sm font-medium text-white bg-[#5d31cf] shadow-[3px_3px_6px_#b8b9be,-3px_-3px_6px_#ffffff] disabled:opacity-50 transition-all cursor-pointer min-w-20 flex items-center justify-center gap-2"
             >
               {uploading ? <Loader size="sm" shadow={false} /> : "Upload"}
             </button>

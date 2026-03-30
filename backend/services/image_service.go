@@ -10,7 +10,6 @@ import (
 	"image/png"
 	"io"
 	"log"
-	"math"
 	"mime"
 	"mime/multipart"
 	"os"
@@ -27,7 +26,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/sprakash57/snapteil/backend/config"
 	"github.com/sprakash57/snapteil/backend/models"
-	"github.com/srwiley/oksvg"
 )
 
 type ImageService struct {
@@ -88,7 +86,7 @@ func (imageService *ImageService) Add(img models.Image) {
 }
 
 // Upload stores the image in its original format and only re-encodes if resizing is required.
-func (imageService *ImageService) Upload(file *multipart.FileHeader, title string, tags []string) (models.Image, error) {
+func (imageService *ImageService) Upload(file *multipart.FileHeader, title string, tags []string, contentType string) (models.Image, error) {
 	src, err := file.Open()
 	if err != nil {
 		return models.Image{}, fmt.Errorf("failed to open uploaded file: %w", err)
@@ -99,8 +97,6 @@ func (imageService *ImageService) Upload(file *multipart.FileHeader, title strin
 	if err != nil {
 		return models.Image{}, fmt.Errorf("failed to read uploaded file: %w", err)
 	}
-
-	contentType := normalizeContentType(file.Header.Get("Content-Type"))
 
 	encoded, width, height, err := imageService.normalizeUpload(data, contentType)
 	if err != nil {
@@ -152,6 +148,29 @@ func (imageService *ImageService) ParseTags(str string) []string {
 	return tags
 }
 
+func (imageService *ImageService) ResolveImageType(file *multipart.FileHeader) (string, error) {
+	src, err := file.Open()
+	if err != nil {
+		return "", fmt.Errorf("failed to open uploaded file: %w", err)
+	}
+	defer src.Close()
+
+	data, err := io.ReadAll(src)
+	if err != nil {
+		return "", fmt.Errorf("failed to read uploaded file: %w", err)
+	}
+
+	contentType, err := detectImageType(data)
+	if err != nil {
+		return "", err
+	}
+	if !imageService.IsValidImageType(contentType) {
+		return "", fmt.Errorf("unsupported image content type: %s", contentType)
+	}
+
+	return contentType, nil
+}
+
 func (imageService *ImageService) IsValidImageType(contentType string) bool {
 	return slices.Contains(imageService.cfg.AllowedMimeTypes, normalizeContentType(contentType))
 }
@@ -166,16 +185,6 @@ func (imageService *ImageService) normalizeImage(img image.Image) image.Image {
 }
 
 func (imageService *ImageService) normalizeUpload(data []byte, contentType string) ([]byte, int, int, error) {
-	if contentType == "image/svg+xml" {
-		width, height, err := imageService.decodeSVGDimensions(data)
-		if err != nil {
-			return nil, 0, 0, fmt.Errorf("failed to decode image: %w", err)
-		}
-
-		width, height = imageService.normalizeDimensions(width, height)
-		return data, width, height, nil
-	}
-
 	img, err := decodeImage(bytes.NewReader(data), contentType)
 	if err != nil {
 		return nil, 0, 0, fmt.Errorf("failed to decode image: %w", err)
@@ -199,32 +208,27 @@ func (imageService *ImageService) normalizeUpload(data []byte, contentType strin
 	return encoded.Bytes(), width, height, nil
 }
 
-func (imageService *ImageService) decodeSVGDimensions(data []byte) (int, int, error) {
-	icon, err := oksvg.ReadIconStream(bytes.NewReader(data))
-	if err != nil {
-		return 0, 0, err
+func detectImageType(data []byte) (string, error) {
+	if _, err := avif.DecodeConfig(bytes.NewReader(data)); err == nil {
+		return "image/avif", nil
 	}
 
-	width := int(math.Round(icon.ViewBox.W))
-	height := int(math.Round(icon.ViewBox.H))
-	if width <= 0 || height <= 0 {
-		return 0, 0, fmt.Errorf("svg has invalid dimensions")
+	if _, err := webp.DecodeConfig(bytes.NewReader(data)); err == nil {
+		return "image/webp", nil
 	}
 
-	return width, height, nil
-}
-
-func (imageService *ImageService) normalizeDimensions(width, height int) (int, int) {
-	maxDim := imageService.cfg.MaxImageDimension
-	if width <= maxDim && height <= maxDim {
-		return width, height
+	if _, format, err := image.DecodeConfig(bytes.NewReader(data)); err == nil {
+		switch format {
+		case "jpeg":
+			return "image/jpeg", nil
+		case "png":
+			return "image/png", nil
+		case "gif":
+			return "image/gif", nil
+		}
 	}
 
-	scale := math.Min(float64(maxDim)/float64(width), float64(maxDim)/float64(height))
-	width = int(math.Round(float64(width) * scale))
-	height = int(math.Round(float64(height) * scale))
-
-	return max(width, 1), max(height, 1)
+	return "", fmt.Errorf("unsupported or invalid image data")
 }
 
 func decodeImage(r io.Reader, contentType string) (image.Image, error) {
@@ -268,8 +272,6 @@ func extensionForContentType(contentType string) string {
 		return ".webp"
 	case "image/avif":
 		return ".avif"
-	case "image/svg+xml":
-		return ".svg"
 	default:
 		if extensions, err := mime.ExtensionsByType(contentType); err == nil && len(extensions) > 0 {
 			return extensions[0]

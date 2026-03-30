@@ -7,6 +7,12 @@ import (
 	"github.com/sprakash57/snapteil/backend/services"
 )
 
-func WebSocketRouteV1(router fiber.Router, socket *services.SocketService) {
-	router.Get("/ws", websocket.New(handlers.SocketHandler(socket)))
+func WebSocketRouteV1(router fiber.Router, socket *services.SocketService, allowedOrigins []string) {
+	router.Get(
+		"/ws",
+		websocket.New(handlers.SocketHandler(socket), websocket.Config{
+			Origins:          allowedOrigins,
+			AllowEmptyOrigin: false,
+		}),
+	)
 }
