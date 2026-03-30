@@ -40,6 +40,10 @@ function App() {
     clearPending();
   }
 
+  /**
+   * Show the newly uploaded image to the uploader immediately; other users receive it
+   * through the pending banner flow and only see it once they click the banner or scroll to top.
+   */
   function handleUpload(img: Image) {
     addTags(img.tags);
     if (

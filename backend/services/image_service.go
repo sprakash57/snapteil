@@ -7,6 +7,7 @@ import (
 	_ "image/gif"
 	"image/jpeg"
 	_ "image/png"
+	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -43,6 +44,8 @@ func NewImageService(cfg config.Config) (*ImageService, error) {
 	sort.Slice(images, func(i, j int) bool {
 		return images[i].CreatedAt.After(images[j].CreatedAt)
 	})
+
+	log.Printf("Loaded %d seed images from ./data/seed.json", len(images))
 
 	return &ImageService{images: images, cfg: cfg}, nil
 }
