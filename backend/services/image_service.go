@@ -1,13 +1,17 @@
 package services
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"image"
-	_ "image/gif"
+	"image/gif"
 	"image/jpeg"
-	_ "image/png"
+	"image/png"
+	"io"
 	"log"
+	"math"
+	"mime"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -18,10 +22,12 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
+	"github.com/gen2brain/avif"
+	"github.com/gen2brain/webp"
 	"github.com/google/uuid"
 	"github.com/sprakash57/snapteil/backend/config"
 	"github.com/sprakash57/snapteil/backend/models"
-	_ "golang.org/x/image/webp"
+	"github.com/srwiley/oksvg"
 )
 
 type ImageService struct {
@@ -81,7 +87,7 @@ func (imageService *ImageService) Add(img models.Image) {
 	imageService.images[insertAt] = img
 }
 
-// Upload decodes, normalizes, and returns the saved uploaded image file.
+// Upload stores the image in its original format and only re-encodes if resizing is required.
 func (imageService *ImageService) Upload(file *multipart.FileHeader, title string, tags []string) (models.Image, error) {
 	src, err := file.Open()
 	if err != nil {
@@ -89,30 +95,28 @@ func (imageService *ImageService) Upload(file *multipart.FileHeader, title strin
 	}
 	defer src.Close()
 
-	img, _, err := image.Decode(src)
+	data, err := io.ReadAll(src)
 	if err != nil {
-		return models.Image{}, fmt.Errorf("failed to decode image: %w", err)
+		return models.Image{}, fmt.Errorf("failed to read uploaded file: %w", err)
 	}
 
-	img = imageService.normalizeImage(img)
-	bounds := img.Bounds()
+	contentType := normalizeContentType(file.Header.Get("Content-Type"))
+
+	encoded, width, height, err := imageService.normalizeUpload(data, contentType)
+	if err != nil {
+		return models.Image{}, err
+	}
 
 	id := uuid.New().String()
-	filename := id + ".jpg"
+	filename := id + extensionForContentType(contentType)
 	filePath := filepath.Join("./uploads", filename)
 
 	if err := os.MkdirAll("./uploads", 0o755); err != nil {
 		return models.Image{}, fmt.Errorf("failed to ensure upload directory: %w", err)
 	}
 
-	outFile, err := os.Create(filePath)
-	if err != nil {
+	if err := os.WriteFile(filePath, encoded, 0o644); err != nil {
 		return models.Image{}, fmt.Errorf("failed to save image: %w", err)
-	}
-	defer outFile.Close()
-	// Encode as JPEG with quality 85 to balance size and quality
-	if err := jpeg.Encode(outFile, img, &jpeg.Options{Quality: 85}); err != nil {
-		return models.Image{}, fmt.Errorf("failed to encode image: %w", err)
 	}
 
 	record := models.Image{
@@ -121,8 +125,8 @@ func (imageService *ImageService) Upload(file *multipart.FileHeader, title strin
 		Tags:      tags,
 		Filename:  filename,
 		URL:       "/uploads/" + filename,
-		Width:     bounds.Dx(),
-		Height:    bounds.Dy(),
+		Width:     width,
+		Height:    height,
 		CreatedAt: time.Now(),
 	}
 
@@ -149,7 +153,7 @@ func (imageService *ImageService) ParseTags(str string) []string {
 }
 
 func (imageService *ImageService) IsValidImageType(contentType string) bool {
-	return slices.Contains(imageService.cfg.AllowedMimeTypes, contentType)
+	return slices.Contains(imageService.cfg.AllowedMimeTypes, normalizeContentType(contentType))
 }
 
 func (imageService *ImageService) MaxFileSize() int64 {
@@ -159,6 +163,132 @@ func (imageService *ImageService) MaxFileSize() int64 {
 func (imageService *ImageService) normalizeImage(img image.Image) image.Image {
 	maxDim := imageService.cfg.MaxImageDimension
 	return imaging.Fit(img, maxDim, maxDim, imaging.Lanczos)
+}
+
+func (imageService *ImageService) normalizeUpload(data []byte, contentType string) ([]byte, int, int, error) {
+	if contentType == "image/svg+xml" {
+		width, height, err := imageService.decodeSVGDimensions(data)
+		if err != nil {
+			return nil, 0, 0, fmt.Errorf("failed to decode image: %w", err)
+		}
+
+		width, height = imageService.normalizeDimensions(width, height)
+		return data, width, height, nil
+	}
+
+	img, err := decodeImage(bytes.NewReader(data), contentType)
+	if err != nil {
+		return nil, 0, 0, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	originalBounds := img.Bounds()
+	normalized := imageService.normalizeImage(img)
+	bounds := normalized.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	if width == originalBounds.Dx() && height == originalBounds.Dy() {
+		return data, width, height, nil
+	}
+
+	var encoded bytes.Buffer
+	if err := encodeImage(&encoded, normalized, contentType); err != nil {
+		return nil, 0, 0, fmt.Errorf("failed to encode image: %w", err)
+	}
+
+	return encoded.Bytes(), width, height, nil
+}
+
+func (imageService *ImageService) decodeSVGDimensions(data []byte) (int, int, error) {
+	icon, err := oksvg.ReadIconStream(bytes.NewReader(data))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	width := int(math.Round(icon.ViewBox.W))
+	height := int(math.Round(icon.ViewBox.H))
+	if width <= 0 || height <= 0 {
+		return 0, 0, fmt.Errorf("svg has invalid dimensions")
+	}
+
+	return width, height, nil
+}
+
+func (imageService *ImageService) normalizeDimensions(width, height int) (int, int) {
+	maxDim := imageService.cfg.MaxImageDimension
+	if width <= maxDim && height <= maxDim {
+		return width, height
+	}
+
+	scale := math.Min(float64(maxDim)/float64(width), float64(maxDim)/float64(height))
+	width = int(math.Round(float64(width) * scale))
+	height = int(math.Round(float64(height) * scale))
+
+	return max(width, 1), max(height, 1)
+}
+
+func decodeImage(r io.Reader, contentType string) (image.Image, error) {
+	switch contentType {
+	case "image/avif":
+		return avif.Decode(r)
+	case "image/webp":
+		return webp.Decode(r)
+	default:
+		img, _, err := image.Decode(r)
+		return img, err
+	}
+}
+
+func encodeImage(w io.Writer, img image.Image, contentType string) error {
+	switch contentType {
+	case "image/jpeg":
+		return jpeg.Encode(w, img, &jpeg.Options{Quality: 85})
+	case "image/png":
+		return png.Encode(w, img)
+	case "image/gif":
+		return gif.Encode(w, img, nil)
+	case "image/webp":
+		return webp.Encode(w, img)
+	case "image/avif":
+		return avif.Encode(w, img)
+	default:
+		return fmt.Errorf("unsupported image content type: %s", contentType)
+	}
+}
+
+func extensionForContentType(contentType string) string {
+	switch contentType {
+	case "image/jpeg":
+		return ".jpg"
+	case "image/png":
+		return ".png"
+	case "image/gif":
+		return ".gif"
+	case "image/webp":
+		return ".webp"
+	case "image/avif":
+		return ".avif"
+	case "image/svg+xml":
+		return ".svg"
+	default:
+		if extensions, err := mime.ExtensionsByType(contentType); err == nil && len(extensions) > 0 {
+			return extensions[0]
+		}
+		return ".img"
+	}
+}
+
+func normalizeContentType(contentType string) string {
+	if contentType == "" {
+		return ""
+	}
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return strings.TrimSpace(contentType)
+	}
+
+	return mediaType
 }
 
 func paginatedResponse(images []models.Image, page, perPage int) models.PaginatedResponse {

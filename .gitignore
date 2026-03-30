@@ -1,11 +1,11 @@
 # Ignore build artifacts and temporary files of backend service
 /backend/tmp/*
-uploads/*
-!uploads/lake.avif
-!uploads/leaves.jpg
-!uploads/nature.avif
-!uploads/path.jpg
-!uploads/water.jpg
+/backend/uploads/*
+!/backend/uploads/lake.avif
+!/backend/uploads/leaves.jpg
+!/backend/uploads/nature.avif
+!/backend/uploads/path.jpg
+!/backend/uploads/water.jpg
 /bin/
 *.out
 *.log

@@ -47,7 +47,7 @@ func UploadImage(imageService *services.ImageService, socket *services.SocketSer
 		}
 
 		if !imageService.IsValidImageType(file.Header.Get("Content-Type")) {
-			return fiber.NewError(fiber.StatusBadRequest, "invalid file type; accepted: JPEG, PNG, GIF, WebP", "AVIF", "SVG")
+			return fiber.NewError(fiber.StatusBadRequest, "invalid file type; accepted: JPEG, PNG, GIF, WebP, AVIF, SVG")
 		}
 
 		record, err := imageService.Upload(file, title, tags)
