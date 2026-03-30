@@ -17,7 +17,7 @@ func Load() Config {
 	return Config{
 		Port:              getEnv("PORT", "4000"),
 		MaxFileSize:       getEnvInt64("MAX_FILE_SIZE", 10*1024*1024),
-		AllowedMimeTypes:  getEnvSlice("ALLOWED_MIME_TYPES", "image/jpeg,image/png,image/gif,image/webp,image/avif,image/svg+xml"),
+		AllowedMimeTypes:  getEnvSlice("ALLOWED_MIME_TYPES", "image/jpeg,image/png,image/webp,image/avif,image/svg+xml"),
 		MaxImageDimension: int(getEnvInt64("MAX_IMAGE_DIMENSION", 1920)),
 	}
 }

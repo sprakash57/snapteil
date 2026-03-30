@@ -40,66 +40,42 @@ func NewImageService(cfg config.Config) (*ImageService, error) {
 		return nil, err
 	}
 
+	sort.Slice(images, func(i, j int) bool {
+		return images[i].CreatedAt.After(images[j].CreatedAt)
+	})
+
 	return &ImageService{images: images, cfg: cfg}, nil
-}
-
-func (imageService *ImageService) normalizeImage(img image.Image) image.Image {
-	bounds := img.Bounds()
-	width, height := bounds.Dx(), bounds.Dy()
-	maxDim := imageService.cfg.MaxImageDimension
-
-	if width <= maxDim && height <= maxDim {
-		return img
-	}
-
-	if width > height {
-		return imaging.Resize(img, maxDim, 0, imaging.Lanczos)
-	}
-	return imaging.Resize(img, 0, maxDim, imaging.Lanczos)
 }
 
 func (imageService *ImageService) GetPaginated(page, perPage int, tags []string) models.PaginatedResponse {
 	imageService.mu.RLock()
 	defer imageService.mu.RUnlock()
 
-	// Filter by tags if provided, otherwise use all images
-	filtered := imageService.images
 	if len(tags) > 0 {
-		filtered = make([]models.Image, 0)
+		filtered := make([]models.Image, 0)
 		for _, img := range imageService.images {
-			for _, tag := range tags {
-				if slices.Contains(img.Tags, tag) {
-					filtered = append(filtered, img)
-					break
-				}
+			if matchesAnyTag(img.Tags, tags) {
+				filtered = append(filtered, img)
 			}
 		}
+
+		return paginatedResponse(filtered, page, perPage)
 	}
 
-	// Sort a copy so we don't mutate the original slice
-	sorted := make([]models.Image, len(filtered))
-	copy(sorted, filtered)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].CreatedAt.After(sorted[j].CreatedAt)
-	})
-
-	total := len(sorted)
-	start := min((page-1)*perPage, total)
-	end := min(start+perPage, total)
-
-	return models.PaginatedResponse{
-		Images:  sorted[start:end],
-		Total:   total,
-		Page:    page,
-		PerPage: perPage,
-		HasMore: end < total,
-	}
+	return paginatedResponse(imageService.images, page, perPage)
 }
 
 func (imageService *ImageService) Add(img models.Image) {
 	imageService.mu.Lock()
 	defer imageService.mu.Unlock()
-	imageService.images = append(imageService.images, img)
+
+	insertAt := sort.Search(len(imageService.images), func(i int) bool {
+		return !imageService.images[i].CreatedAt.After(img.CreatedAt)
+	})
+
+	imageService.images = append(imageService.images, models.Image{})
+	copy(imageService.images[insertAt+1:], imageService.images[insertAt:])
+	imageService.images[insertAt] = img
 }
 
 // Upload decodes, normalizes, and returns the saved uploaded image file.
@@ -121,6 +97,10 @@ func (imageService *ImageService) Upload(file *multipart.FileHeader, title strin
 	id := uuid.New().String()
 	filename := id + ".jpg"
 	filePath := filepath.Join("./uploads", filename)
+
+	if err := os.MkdirAll("./uploads", 0o755); err != nil {
+		return models.Image{}, fmt.Errorf("failed to ensure upload directory: %w", err)
+	}
 
 	outFile, err := os.Create(filePath)
 	if err != nil {
@@ -155,19 +135,8 @@ func (imageService *ImageService) ParseTags(str string) []string {
 	seen := make(map[string]bool)
 	tags := make([]string, 0, len(parts))
 	for _, part := range parts {
-		tag := strings.TrimSpace(strings.ToLower(part))
+		tag := sanitizeTag(part)
 		if tag == "" || seen[tag] {
-			continue
-		}
-		// Strip any character that is not a-z, 0-9 or hyphen
-		var cleaned strings.Builder
-		for _, r := range tag {
-			if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
-				cleaned.WriteRune(r)
-			}
-		}
-		tag = strings.Trim(cleaned.String(), "-")
-		if tag == "" || len(tag) > 24 {
 			continue
 		}
 		seen[tag] = true
@@ -182,4 +151,54 @@ func (imageService *ImageService) IsValidImageType(contentType string) bool {
 
 func (imageService *ImageService) MaxFileSize() int64 {
 	return imageService.cfg.MaxFileSize
+}
+
+func (imageService *ImageService) normalizeImage(img image.Image) image.Image {
+	maxDim := imageService.cfg.MaxImageDimension
+	return imaging.Fit(img, maxDim, maxDim, imaging.Lanczos)
+}
+
+func paginatedResponse(images []models.Image, page, perPage int) models.PaginatedResponse {
+	total := len(images)
+	start := min((page-1)*perPage, total)
+	end := min(start+perPage, total)
+	pageImages := append([]models.Image(nil), images[start:end]...)
+
+	return models.PaginatedResponse{
+		Images:  pageImages,
+		Total:   total,
+		Page:    page,
+		PerPage: perPage,
+		HasMore: end < total,
+	}
+}
+
+func matchesAnyTag(imageTags, filterTags []string) bool {
+	for _, tag := range filterTags {
+		if slices.Contains(imageTags, tag) {
+			return true
+		}
+	}
+	return false
+}
+
+func sanitizeTag(raw string) string {
+	tag := strings.TrimSpace(strings.ToLower(raw))
+	if tag == "" {
+		return ""
+	}
+
+	var cleaned strings.Builder
+	for _, r := range tag {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+			cleaned.WriteRune(r)
+		}
+	}
+
+	tag = strings.Trim(cleaned.String(), "-")
+	if tag == "" || len(tag) > 24 {
+		return ""
+	}
+
+	return tag
 }
