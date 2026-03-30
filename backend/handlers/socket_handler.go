@@ -7,12 +7,6 @@ import (
 	"github.com/sprakash57/snapteil/backend/services"
 )
 
-// SocketHandler godoc
-//
-//	@Summary		WebSocket connection
-//	@Description	create a WebSocket connection to receive live image upload notifications
-//	@Tags			websocket
-//	@Router			/api/v1/ws [get]
 func SocketHandler(socket *services.SocketService) func(*websocket.Conn) {
 	return func(conn *websocket.Conn) {
 		socket.Register(conn)

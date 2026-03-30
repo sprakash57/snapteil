@@ -12,7 +12,7 @@ import (
 //
 //	@Summary		Upload an image
 //	@Description	Uploads a new image with title and tags
-//	@Tags			images
+//	@Tags			Upload
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Param			title	formData	string	true	"Image title"

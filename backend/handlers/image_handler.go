@@ -15,7 +15,7 @@ import (
 //
 //	@Summary		Get initial images
 //	@Description	Returns the list of initial images with their metadata
-//	@Tags			images
+//	@Tags			Image
 //	@Produce		json
 //	@Success		200	{array}		models.Image
 //	@Failure		500	{object}	models.ErrorResponse
@@ -40,7 +40,7 @@ func GetInitialImagesHandler() fiber.Handler {
 //
 //	@Summary		Get paginated images
 //	@Description	Returns a paginated list of images with optional tag filtering
-//	@Tags			images
+//	@Tags			Image
 //	@Produce		json
 //	@Param			page	query	int	false	"Page number (default: 1)"
 //	@Param			perPage	query	int	false	"Items per page (default: 5, max: 20)"

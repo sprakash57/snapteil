@@ -16,7 +16,7 @@ type HealthResponse struct {
 //
 //	@Summary		Health check
 //	@Description	Returns server health status with a timestamp
-//	@Tags			health
+//	@Tags			Health
 //	@Produce		json
 //	@Success		200	{object}	HealthResponse
 //	@Failure		500	{object}	models.ErrorResponse
