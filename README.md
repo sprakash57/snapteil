@@ -105,7 +105,7 @@ go test ./...
 
 The backend routes are organized under `/api/v1`.
 
-For a complete list of endpoints, request/response shapes, and parameters, review the Swagger UI:
+For a complete list of endpoints, request/response shapes, and parameters, review the Swagger UI when Swagger is enabled:
 
 - `http://localhost:4000/swagger`
 
@@ -145,4 +145,5 @@ For a complete list of endpoints, request/response shapes, and parameters, revie
 
 - Initial images are read from `backend/data/seed.json`.
 - Uploaded images are written to `backend/uploads` locally or to the Docker volume when using Compose.
+- It is possible to configure some feature flags with the help of `backend/.env` file. For example, set `ENABLE_SWAGGER=false` to disable the Swagger UI. Check `.env.example` for complete list.
 - A separate design note is available in [ARCHITECTURE_NOTES.md](https://github.com/sprakash57/snapteil/blob/main/ARCHITECTURE_NOTES.md).

@@ -4,6 +4,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/gofiber/fiber/v3/log"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -16,6 +19,12 @@ type Config struct {
 }
 
 func Load() Config {
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Warn(".env file not found. Using default values and environment variables.")
+	}
+
 	return Config{
 		Port:              getEnv("PORT", "4000"),
 		MaxFileSize:       getEnvInt64("MAX_FILE_SIZE", 10*1024*1024),
