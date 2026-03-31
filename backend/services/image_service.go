@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"image/gif"
@@ -26,6 +27,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/sprakash57/snapteil/backend/config"
 	"github.com/sprakash57/snapteil/backend/models"
+)
+
+var (
+	ErrTooManyTags = errors.New("maximum 5 tags allowed")
+	ErrTagTooLong  = errors.New("tag must be 24 characters or fewer")
+	ErrInvalidTag  = errors.New("tag must use only letters, numbers, and hyphens")
 )
 
 type ImageService struct {
@@ -130,22 +137,36 @@ func (imageService *ImageService) Upload(file *multipart.FileHeader, title strin
 	return record, nil
 }
 
-func (imageService *ImageService) ParseTags(str string) []string {
+func (imageService *ImageService) ParseTags(str string) ([]string, error) {
 	if str == "" {
-		return []string{}
+		return []string{}, nil
 	}
 	parts := strings.Split(str, ",")
+	// Keep tags unique so repeated values do not bypass the max-tag limit or create duplicate pills in the UI.
 	seen := make(map[string]bool)
 	tags := make([]string, 0, len(parts))
 	for _, part := range parts {
-		tag := sanitizeTag(part)
-		if tag == "" || seen[tag] {
+		tag := normalizeTag(part)
+		if tag == "" {
 			continue
+		}
+		if len([]rune(tag)) > 24 {
+
+			return nil, fmt.Errorf("%w: %q", ErrTagTooLong, tag)
+		}
+		if !isValidTag(tag) {
+			return nil, fmt.Errorf("%w: %q", ErrInvalidTag, tag)
+		}
+		if seen[tag] {
+			continue
+		}
+		if len(tags) >= 5 {
+			return nil, ErrTooManyTags
 		}
 		seen[tag] = true
 		tags = append(tags, tag)
 	}
-	return tags
+	return tags, nil
 }
 
 func (imageService *ImageService) ResolveImageType(file *multipart.FileHeader) (string, error) {
@@ -317,23 +338,17 @@ func matchesAnyTag(imageTags, filterTags []string) bool {
 	return false
 }
 
-func sanitizeTag(raw string) string {
-	tag := strings.TrimSpace(strings.ToLower(raw))
-	if tag == "" {
-		return ""
-	}
+func normalizeTag(raw string) string {
+	return strings.TrimSpace(strings.ToLower(raw))
+}
 
-	var cleaned strings.Builder
+func isValidTag(tag string) bool {
 	for _, r := range tag {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
-			cleaned.WriteRune(r)
+			continue
 		}
+		return false
 	}
 
-	tag = strings.Trim(cleaned.String(), "-")
-	if tag == "" || len(tag) > 24 {
-		return ""
-	}
-
-	return tag
+	return true
 }

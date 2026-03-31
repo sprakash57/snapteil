@@ -18,14 +18,34 @@ import (
 	"github.com/sprakash57/snapteil/backend/models"
 )
 
-func TestParseTagsSanitizesAndDeduplicates(t *testing.T) {
+func TestParseTagsNormalizesAndDeduplicates(t *testing.T) {
 	imageService := &ImageService{}
 
-	got := imageService.ParseTags(" Nature , city!, city, street-fight, ----, this-tag-is-way-too-long-for-the-limit ")
+	got, err := imageService.ParseTags(" Nature , city, city, street-fight ")
+	if err != nil {
+		t.Fatalf("ParseTags() error = %v", err)
+	}
+
 	want := []string{"nature", "city", "street-fight"}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("ParseTags() = %v, want %v", got, want)
+	}
+}
+
+func TestParseTagsRejectsInvalidCharacters(t *testing.T) {
+	imageService := &ImageService{}
+
+	if _, err := imageService.ParseTags("good-tag, bad tag!"); err == nil {
+		t.Fatal("expected invalid tag characters to be rejected")
+	}
+}
+
+func TestParseTagsRejectsLongTag(t *testing.T) {
+	imageService := &ImageService{}
+
+	if _, err := imageService.ParseTags("this-tag-is-way-too-long-for-the-limit"); err == nil {
+		t.Fatal("expected oversized tag to be rejected")
 	}
 }
 

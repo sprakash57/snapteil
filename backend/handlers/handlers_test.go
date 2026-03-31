@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"image"
+	"image/color"
+	"image/png"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -171,6 +174,96 @@ func TestUploadImageRejectsInvalidImageFile(t *testing.T) {
 	}
 }
 
+func TestUploadImageRejectsTagWithInvalidCharacters(t *testing.T) {
+	restore := chdirToBackendRoot(t)
+	defer restore()
+
+	imageService := mustNewImageService(t)
+	socketService := services.NewSocketService()
+
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	if err := writer.WriteField("title", "Invalid tag"); err != nil {
+		t.Fatalf("WriteField(title) error = %v", err)
+	}
+	if err := writer.WriteField("tags", "good-tag,bad tag!"); err != nil {
+		t.Fatalf("WriteField(tags) error = %v", err)
+	}
+	part, err := writer.CreateFormFile("file", "pixel.png")
+	if err != nil {
+		t.Fatalf("CreateFormFile() error = %v", err)
+	}
+	if _, err := part.Write(mustPNGBytes(t, 10, 10)); err != nil {
+		t.Fatalf("Write() error = %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	app := fiber.New(fiber.Config{ErrorHandler: ErrorHandler})
+	app.Post("/uploads", UploadImage(imageService, socketService))
+
+	req := httptest.NewRequest("POST", "/uploads", &body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	resp := performRequest(t, app, req)
+
+	if resp.StatusCode != fiber.StatusBadRequest {
+		t.Fatalf("StatusCode = %d, want %d", resp.StatusCode, fiber.StatusBadRequest)
+	}
+
+	var errResp models.ErrorResponse
+	decodeJSON(t, resp, &errResp)
+
+	if errResp.Message != `tag must use only letters, numbers, and hyphens: "bad tag!"` {
+		t.Fatalf("Message = %q, want invalid tag error", errResp.Message)
+	}
+}
+
+func TestUploadImageRejectsTagLongerThan24Characters(t *testing.T) {
+	restore := chdirToBackendRoot(t)
+	defer restore()
+
+	imageService := mustNewImageService(t)
+	socketService := services.NewSocketService()
+
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	if err := writer.WriteField("title", "Long tag"); err != nil {
+		t.Fatalf("WriteField(title) error = %v", err)
+	}
+	if err := writer.WriteField("tags", "this-tag-is-way-too-long-for-the-limit"); err != nil {
+		t.Fatalf("WriteField(tags) error = %v", err)
+	}
+	part, err := writer.CreateFormFile("file", "pixel.png")
+	if err != nil {
+		t.Fatalf("CreateFormFile() error = %v", err)
+	}
+	if _, err := part.Write(mustPNGBytes(t, 10, 10)); err != nil {
+		t.Fatalf("Write() error = %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	app := fiber.New(fiber.Config{ErrorHandler: ErrorHandler})
+	app.Post("/uploads", UploadImage(imageService, socketService))
+
+	req := httptest.NewRequest("POST", "/uploads", &body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	resp := performRequest(t, app, req)
+
+	if resp.StatusCode != fiber.StatusBadRequest {
+		t.Fatalf("StatusCode = %d, want %d", resp.StatusCode, fiber.StatusBadRequest)
+	}
+
+	var errResp models.ErrorResponse
+	decodeJSON(t, resp, &errResp)
+
+	if errResp.Message != `tag must be 24 characters or fewer: "this-tag-is-way-too-long-for-the-limit"` {
+		t.Fatalf("Message = %q, want oversized tag error", errResp.Message)
+	}
+}
+
 func mustNewImageService(t *testing.T) *services.ImageService {
 	t.Helper()
 
@@ -233,4 +326,22 @@ func decodeJSON(t *testing.T, resp *http.Response, target any) {
 	if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
 		t.Fatalf("Decode() error = %v", err)
 	}
+}
+
+func mustPNGBytes(t *testing.T, width, height int) []byte {
+	t.Helper()
+
+	img := image.NewNRGBA(image.Rect(0, 0, width, height))
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.Set(x, y, color.NRGBA{R: 220, G: uint8(x % 255), B: uint8(y % 255), A: 255})
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatalf("png.Encode() error = %v", err)
+	}
+
+	return buf.Bytes()
 }

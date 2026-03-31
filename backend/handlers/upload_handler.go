@@ -32,9 +32,9 @@ func UploadImage(imageService *services.ImageService, socket *services.SocketSer
 			return fiber.NewError(fiber.StatusBadRequest, "title must be 100 characters or fewer")
 		}
 
-		tags := imageService.ParseTags(c.FormValue("tags"))
-		if len(tags) > 5 {
-			return fiber.NewError(fiber.StatusBadRequest, "maximum 5 tags allowed")
+		tags, err := imageService.ParseTags(c.FormValue("tags"))
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 
 		file, err := c.FormFile("file")
