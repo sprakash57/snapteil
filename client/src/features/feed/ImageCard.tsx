@@ -6,12 +6,12 @@ interface ImageCardProps {
 
 export default function ImageCard({ image }: ImageCardProps) {
   return (
-    <article className="w-full max-w-117 bg-[#e0e5ec] shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff] overflow-hidden">
+    <article className="w-full max-w-117 bg-[#e0e5ec] shadow-[6px_6px_12px_#b8b9be,-6px_-6px_12px_#ffffff] overflow-hidden sm:rounded-2xl">
       <div className="w-full bg-[#d5dae3]">
         <img
           src={image.url}
           alt={image.title}
-          className="w-full h-auto block"
+          className="w-full h-auto block sm:rounded-t-2xl"
           loading="lazy"
         />
       </div>

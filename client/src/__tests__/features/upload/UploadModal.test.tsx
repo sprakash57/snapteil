@@ -197,6 +197,26 @@ describe("UploadModal", () => {
     });
   });
 
+  it("shows a file size message for 413 responses without JSON", async () => {
+    const { container } = renderModal();
+
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      status: 413,
+      json: () => Promise.reject(new Error("not json")),
+    } as unknown as Response);
+
+    const spy = spyFormData({ title: "Test upload" });
+    submitForm(container);
+    spy.mockRestore();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "File size exceeds limit",
+      );
+    });
+  });
+
   // ── Loading state ─────────────────────────────────────────────────────────
 
   it("shows Loader dots while upload is in progress", async () => {

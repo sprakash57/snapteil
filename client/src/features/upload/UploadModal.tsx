@@ -93,6 +93,9 @@ export default function UploadModal({ onClose, onUploaded }: UploadModalProps) {
         body: formData,
       });
       if (!res.ok) {
+        if (res.status === 413) {
+          throw new Error("File size exceeds limit");
+        }
         const body = await res.json().catch(() => null);
         throw new Error(body?.message || "Upload failed");
       }
